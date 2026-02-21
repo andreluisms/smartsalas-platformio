@@ -1,6 +1,5 @@
-#include "Config.h"
+
 #include "AwaitHttpService.h"
-#include "Global.h"
 
 Config __configAcess;
 BLEServerService* __bleConfiguration; 
@@ -16,52 +15,39 @@ void AwaitHttpService::startAwait()
     xTaskCreate(this->awaitSolicitation, "awaitSolicitation", 8192, this, 8, NULL);
 }
 
-void AwaitHttpService::awaitSolicitation(void* _this)
-{
+void AwaitHttpService::awaitSolicitation(void* _this){
     std::vector<Solicitacao> solicitacao;
     
-    while(true)
-    {
-        if(WiFi.status() == WL_CONNECTED)
-        {
+    while(true){
+        if(WiFi.status() == WL_CONNECTED){
             if (__configAcess.isDebug())
-            {
-                Serial.println("\n=======================================");
-                Serial.println("[AwaitHttpService] Start");
-            }
+                Serial.println("[AwaitHttpService::startAwait()] Start");
 
             solicitacao = __httpService.getSolicitacao(MONITORAMENTO);
             
-            for (Solicitacao s : solicitacao)
-            {
+            for (Solicitacao s : solicitacao){
                 executeSolicitation(s);
             }
 
             if (__configAcess.isDebug())
-            {
-                Serial.println("\n=======================================");
-                Serial.println("[AwaitHttpService] End");
-            }
+                Serial.println("[AwaitHttpService::startAwait()] End");
         }
         
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
-bool AwaitHttpService::connectToActuator(String uuidDevice) 
-{
-  Serial.println("[AwaitHttpService]: connectToActuator ACTUATOR : " + uuidDevice);
+bool AwaitHttpService::connectToActuator(String uuidDevice) {
+  Serial.println("[AwaitHttpService::connectToActuator()]: connectToActuator ACTUATOR : " + uuidDevice);
   bool deviceConnected = false;
   int i = 0;
   int count = 8;
             
-  do
-  { 
+  do{ 
     i++;
     
-    if (__configAcess.isDebug())
-    {
-      Serial.print("[AwaitHttpService]: attempt number: ");
+    if (__configAcess.isDebug()){
+      Serial.print("[AwaitHttpService::connectToActuator()]: attempt number: ");
       Serial.println(i);
     }
     
@@ -75,13 +61,12 @@ bool AwaitHttpService::connectToActuator(String uuidDevice)
   } while(i < count);
 
   if( i >= count && !deviceConnected)
-      Serial.println("[AwaitHttpService]: device not found");
+      Serial.println("[AwaitHttpService::connectToActuator()]: device not found");
 
   return deviceConnected;
 }
 
-void AwaitHttpService::executeSolicitation(Solicitacao request) 
-{
+void AwaitHttpService::executeSolicitation(Solicitacao request) {
     __configAcess.lock();
 
     if(!__bleConfiguration->isSensorListed(request.uuid, TYPE_ACTUATOR)) {
@@ -97,19 +82,14 @@ void AwaitHttpService::executeSolicitation(Solicitacao request)
     
     bool dispConnected = connectToActuator(request.uuid);
 
-    if(dispConnected)
-    {
+    if(dispConnected){
         String payload = getMessageToSend(request);
-        Serial.println("==================================");
-        Serial.println("[AwaitHttpService] Sendig Payload: " + payload);
+        Serial.println("[AwaitHttpService::executeSolicitation()] Sendig Payload: " + payload);
 
         std::vector<String> subStrings = __utils.splitPayload(payload, MAX_LENGTH_PACKET);
 
-        String packet;
-        for (packet : subStrings)
-        {
-            Serial.println("==================================");         
-            Serial.println("[AwaitHttpService] Sendig packet: " + packet);
+        for (const String& packet : subStrings){       
+            Serial.println("[AwaitHttpService::executeSolicitation()] Sendig packet: " + packet);
             __bleConfiguration->sendMessageToActuator(packet);
         }
 
@@ -128,10 +108,9 @@ void AwaitHttpService::executeSolicitation(Solicitacao request)
 
     if (__configAcess.isDebug())
     {
-        Serial.println("==================================");
-        Serial.println("[AwaitHttpService] Resposta BLE");
-        Serial.println("[AwaitHttpService] recebeu retorno: " + HTTP_RECEIVED_DATA);
-        Serial.println("[AwaitHttpService] mensagem: " + HTTP_MESSAGE);
+        Serial.println("[AwaitHttpService::executeSolicitation()] Resposta BLE");
+        Serial.println("[AwaitHttpService::executeSolicitation()] recebeu retorno: " + HTTP_RECEIVED_DATA);
+        Serial.println("[AwaitHttpService::executeSolicitation()] mensagem: " + HTTP_MESSAGE);
     }
 
     HTTP_RECEIVED_DATA = false;
@@ -167,9 +146,6 @@ void AwaitHttpService::awaitsReturn()
   { 
       delay(1000);
       if (__configAcess.isDebug())
-      {    
-        Serial.print("[AwaitHttpService] TIME AWAITS: ");
-        Serial.println(millis());
-      }
+        Serial.print("[AwaitHttpService::awaitsReturn()] TIME AWAITS: " + millis());
   }    
 }

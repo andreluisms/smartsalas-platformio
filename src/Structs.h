@@ -1,7 +1,8 @@
 #ifndef BLESensorSettings_h
 #define BLESensorSettings_h
 
-#include "BLEDevice.h"
+#include <NimBLEDevice.h>
+// #include "BLEDevice.h"
 
 // Hardware
 struct HardwareRecord
@@ -21,7 +22,7 @@ struct MonitoringRecord
     float temperature; 
 };
 
-typedef struct BLEDeviceConnect
+struct BLEDeviceConnect
 {
   BLEClient* pClient;
   BLERemoteCharacteristic* pRemoteCharacteristic;
@@ -30,7 +31,7 @@ typedef struct BLEDeviceConnect
   bool deviceFound = true;
 };
 
-typedef struct MonitoringRequest
+struct MonitoringRequest
 {
   String type;
   String code;
@@ -41,7 +42,7 @@ typedef struct MonitoringRequest
 /*
  * Estrutura usada para guardar dados da solicitacao
  */
-typedef struct Solicitacao
+struct Solicitacao
 {
   int id;
   String type;
@@ -54,7 +55,7 @@ typedef struct Solicitacao
 /*
  * Estrutura usada para guardar dados da reserva da sala
  */
-typedef struct Reserva {
+struct Reserva {
   int id;
   String  date;
   String  horarioInicio;

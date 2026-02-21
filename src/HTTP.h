@@ -1,7 +1,10 @@
 #ifndef HTTP_h
 #define HTTP_h
 
+#include <Arduino.h>
+#include <HTTPClient.h>
 #include "Config.h"
+#include "WiFi.h"
 
 class HTTP
 {

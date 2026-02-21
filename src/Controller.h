@@ -1,6 +1,16 @@
 #ifndef Controller_h
 #define Controller_h
-#include "Config.h"
+
+#include <ArduinoJson.h>
+
+#include "AwaitHttpService.h"
+#include "BLESensorService.h"
+#include "BLEServerService.h"
+#include "EnvironmentVariablesService.h"
+#include "EquipmentService.h"
+#include "HTTPService.h"
+#include "UtilsService.h"
+#include "Structs.h"
 
 class Controller
 {   

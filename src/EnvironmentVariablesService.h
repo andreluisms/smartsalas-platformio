@@ -1,7 +1,22 @@
 #ifndef EnvironmentVariablesService_h
 #define EnvironmentVariablesService_h
 
+#ifdef _WIN32
+    #include <Vector>
+#else
+    #include <vector>
+#endif
+
+
+#include <Arduino.h>
+#include "Global.h"
+#include "BLEServerService.h"
+#include "HTTPService.h"
 #include "Config.h"
+#include "UtilsService.h"
+#include "WiFiService.h"
+#include "Structs.h"
+
 
 using namespace std;
 

@@ -2,11 +2,27 @@
 #define BLEServerService_h
 
 #include <unordered_map>
-#include "Hardware.h"
+
+#ifdef _WIN32
+    #include <String> // Para Windows
+    #include <Vector>
+#else
+    #include <string.h> // Para Linux
+    #include <vector>
+#endif
+
 #include <Arduino.h>
-#include "BLEScan.h"
-#include <BLEDevice.h>
+// #include <BLEDevice.h>
+// #include <BLEScan.h>
+// #include <BLEAdvertisedDevice.h>
+#include <NimBLEDevice.h>
+#include <unordered_map>
+#include "AwaitHttpService.h"
+#include "Config.h"
+#include "EnvironmentVariablesService.h"
 #include "Structs.h"
+#include "WiFiService.h"
+#include "Hardware.h"
 
 #define TIME_CONNECTION  5000 
 #define TIME_WAITING_CONNECTION 180000
@@ -15,6 +31,8 @@ static BLEUUID CHARACTERISTIC_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 static BLEUUID SERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 
 using namespace std;
+
+class Hardware;
 
 class BLEServerService 
 {
@@ -25,7 +43,7 @@ class BLEServerService
     static vector<struct HardwareRecord> __actuators;
     static BLEScan* __pBLEScan;
     static vector<BLEAdvertisedDevice*> __filteredDevices;
-    static unordered_map<string, Hardware> __devicesMapped;
+    static std::unordered_map<std::string, Hardware> __devicesMapped;
     static BLEDeviceConnect* __actuatorConnected;
     static bool __receivedData;
     

@@ -1,7 +1,12 @@
 #ifndef Hardware_h
 #define Hardware_h
 
+#include <Arduino.h>
+// #include <BLEAdvertisedDevice.h>
+// #include <BLEAddress.h>
+#include <NimBLEDevice.h>
 #include "Config.h"
+#include "WiFi.h"
 
 class Hardware
 {

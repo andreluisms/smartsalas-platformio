@@ -1,6 +1,5 @@
-#include "Config.h"
 #include "Controller.h"
-#include "BLESensorService.h"
+
 
 // Construtor da classe Controller
 Controller::Controller(){}

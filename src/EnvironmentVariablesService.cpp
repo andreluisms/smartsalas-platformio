@@ -1,5 +1,5 @@
 #include "EnvironmentVariablesService.h"
-#include "Global.h"
+
 
 String __currentTime;
 struct Monitoramento EnvironmentVariablesService::__monitoringConditioner;
@@ -108,8 +108,7 @@ void EnvironmentVariablesService::sendDataToActuator(String uuid, String message
   {
     std::vector<String> subStrings = __utilsService.splitPayload(message, MAX_LENGTH_PACKET);
 
-    String packet;
-    for (packet : subStrings)
+    for (const String& packet: subStrings)
     {
       Serial.println("==================================");         
       Serial.println("[ENVIRONMENT_VARIABLES] Sendig packet: " + packet);
@@ -173,9 +172,8 @@ bool EnvironmentVariablesService::getRoomDuringClassTime() {
   
   String horaInicio, horaFim;
   bool inClass = false;
-  struct Reserva r;
   
-  for (r: __reservations) {
+  for (const Reserva& r: __reservations) {
 
     horaInicio = r.horarioInicio;
     horaFim = r.horarioFim;

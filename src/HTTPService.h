@@ -1,7 +1,12 @@
 #ifndef HTTPService_h
 #define HTTPService_h
 
+#include <ArduinoJson.h>
+#include <Arduino.h>
 #include "Config.h"
+#include "Hardware.h"
+#include "Structs.h"
+#include "HTTP.h"
 
 class HTTPService
 {

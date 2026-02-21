@@ -103,7 +103,7 @@ void EquipmentService::SendIrComand(vector<int> codigo) {
 bool EquipmentService::checkIrms() {
 
   double Irms = __sct13.calcIrms(1480); // Calcula o valor da Corrente
-  int potencia = Irms * tensao; // Calcula o valor da Potencia Instantanea
+  // int potencia = Irms * tensao; // Calcula o valor da Potencia Instantanea
 
   if (Irms > 2) // se a corrente for maior que (valor de Ampere considerado ligado, é enviado a resposta para aplicação que o sensor está ligado
     return true;
@@ -191,7 +191,7 @@ String EquipmentService::executeActionFromController(String data) {
 String EquipmentService::executeActionIntoConditioner(String command, String state){
   
   Config config;
-  vector <int> codigo;
+  std::vector <int> codigo;
   SplitIrComands(command, codigo);
   int attempt = 0;
   bool isSuccessful, isOn;

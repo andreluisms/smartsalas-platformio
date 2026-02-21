@@ -2,34 +2,34 @@
 #ifndef Config_h
 #define Config_h
 
-#include "Enums.h"
+
 #include <Arduino.h>
+#include <mutex>
 #ifdef _WIN32
     #include <String> // Para Windows
-    #include <Vector>
 #else
     #include <string.h> // Para Linux
-    #include <vector>
 #endif
-
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <IRremoteESP8266.h>
-#include <IRsend.h>
-#include <EmonLib.h>
-#include <ArduinoJson.h>
-#include "Controller.h"
-#include "WiFiService.h"
-#include "HTTP.h"
-#include "Structs.h"
-#include "HTTPService.h"
-#include "Hardware.h"
-#include "DHT.h"
-#include "BLEServerService.h"
-#include "AwaitHttpService.h"
-#include "EnvironmentVariablesService.h"
 #include "UtilsService.h"
-#include <mutex>
+// #include "Enums.h"
+// #include <WiFi.h>
+// #include <HTTPClient.h>
+// #include <IRremoteESP8266.h>
+// #include <IRsend.h>
+// #include <EmonLib.h>
+// #include <ArduinoJson.h>
+// #include "Controller.h"
+// #include "WiFiService.h"
+// #include "HTTP.h"
+// #include "Structs.h"
+// #include "HTTPService.h"
+// #include "Hardware.h"
+// #include "DHT.h"
+// #include "BLEServerService.h"
+// #include "AwaitHttpService.h"
+// #include "EnvironmentVariablesService.h"
+// #include "UtilsService.h"
+// #include <mutex>
 
 
 

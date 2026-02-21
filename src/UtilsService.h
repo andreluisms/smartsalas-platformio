@@ -1,7 +1,11 @@
 #ifndef UtilsService_h
 #define UtilsService_h
 
-#include "Config.h"
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include "EnvironmentVariablesService.h"
+#include "HTTPService.h"
+#include "Structs.h"
 
 #define AC_ON  "AC-ON"
 #define AC_OFF "AC-OFF" 

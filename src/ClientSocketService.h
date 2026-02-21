@@ -1,11 +1,23 @@
 #ifndef ClientSocketService_h
 #define ClientSocketService_h
 
-#include "Config.h"
+// #ifdef _WIN32
+//     #include <String> // Para Windows
+// #else
+//     #include <string.h> // Para Linux
+// #endif
 
-#define CONDICIONADOR  "CONDICIONADOR"
-#define LUZES "LUZES"
-#define ATUALIZAR "ATUALIZAR_HORARIOS"
+#include "BLEServerService.h"
+#include "Config.h"
+#include "EnvironmentVariablesService.h"
+#include "HTTPService.h"
+#include "UtilsService.h"
+#include "WiFiServer.h"
+#include "Global.h"
+
+// #define CONDICIONADOR  "CONDICIONADOR"
+// #define LUZES "LUZES"
+// #define ATUALIZAR "ATUALIZAR_HORARIOS"
 
 
 class ClientSocketService 

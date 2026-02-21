@@ -1,4 +1,3 @@
-#include "Config.h"
 #include "Hardware.h"
 
 int __id;

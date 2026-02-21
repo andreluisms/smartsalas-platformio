@@ -1,14 +1,15 @@
 #ifndef GlobalESP_h
 #define GlobalESP_h
 
-#ifdef _WIN32
-    #include <String> // Para Windows
-#else
-    #include <string.h> // Para Linux
-#endif
-
+#include <Arduino.h>
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
+
+#define CONDICIONADOR  "CONDICIONADOR"
+#define LUZES "LUZES"
+#define ATUALIZAR "ATUALIZAR_HORARIOS"
+#define MONITORAMENTO "MONITORAMENTO"
+
 extern String COMMAND;
 extern IRsend irsend;  // Set the GPIO to be used to sending the message.
 extern bool SEND_DATA;

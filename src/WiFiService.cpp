@@ -1,4 +1,3 @@
-#include "Config.h"
 #include "WiFiService.h"
 
 // Construtor da classe WiFiService (vazio, sem inicializações)
@@ -51,7 +50,7 @@ void WiFiService::connect(){
     if (WiFi.status() == WL_CONNECTED && config.isDebug()){
         // Obtém o IP atribuído pelo roteador
         IPAddress ip = WiFi.localIP();
-        Serial.println("[WiFiService::connect()] Conectado a rede: " + config.getSSID() + ", IP: " + ip);
+        Serial.println("[WiFiService::connect()] Conectado a rede: " + config.getSSID() + ", IP: " + ip.toString());
 //        Serial.println(ip);
     }
    

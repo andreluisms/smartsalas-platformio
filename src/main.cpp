@@ -1,7 +1,9 @@
-#include "Config.h"
+#include "BLEServerService.h"
+#include "Controller.h"
+#include "Structs.h"
+#include "WiFiService.h" 
 
 BLEServerService* bleConfig; 
-
 HardwareRecord hardware;
 Controller controller;
 WiFiService wiFiService;
@@ -12,7 +14,6 @@ void setup() {
 	bool init = false;
 
   wiFiService.connect();
-
 	do {
 		if ( controller.start(hardware) ) {
 			if ( controller.registerHardware(hardware) ) {

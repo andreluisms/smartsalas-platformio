@@ -14,14 +14,10 @@ std::mutex Config::__envVariablesMutex;
 
 Config::Config(){
     __tokenApp  = "594ac3eb82b5080393ad5c426f61c1ed5ac53f90e1abebc15316888cf1c8f5fe";
-    __url       = "http://marcosdosea-002-site2.itempurl.com/api";
+    __url       = "http://itetech-001-site4.qtempurl.com/api";
     __debug     = true;
-    //__ssid      = "TransmissaoAula";
-    //__password  = "#ufstransmissao#";
-    __ssid      = "euuu";
-    __password  = "marlay123";
-    //__ssid      = "Apartamento 201-2.4";
-    //__password  = "Ald50983021";
+    __ssid      = "TransmissaoAula";
+    __password  = "#ufstransmissao#";
     __basetime  = 180000;
     __ledStatus = 2;
     __type  = TYPE_CONTROLLER;

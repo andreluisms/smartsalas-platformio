@@ -1,4 +1,3 @@
-#include "Config.h"
 #include "ClientSocketService.h"
 
 Config configuration;

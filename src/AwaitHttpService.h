@@ -1,10 +1,23 @@
 #ifndef AwaitHttpService_h
 #define AwaitHttpService_h
 
-#define CONDICIONADOR  "AR_CONDICIONADO"
-#define LUZES "LUZES"
-#define MONITORAMENTO "MONITORAMENTO"
-#define ATUALIZAR "ATUALIZAR_HORARIOS"
+#include <WiFi.h>
+
+#include "BLEServerService.h"
+#include "Config.h"
+#include "EnvironmentVariablesService.h"
+#include "Global.h"
+#include "HTTPService.h"
+#include "Structs.h"
+#include "UtilsService.h"
+#include "WiFiService.h"
+
+
+
+// #define CONDICIONADOR  "AR_CONDICIONADO"
+// #define LUZES "LUZES"
+// #define MONITORAMENTO "MONITORAMENTO"
+// #define ATUALIZAR "ATUALIZAR_HORARIOS"
 
 class AwaitHttpService 
 {

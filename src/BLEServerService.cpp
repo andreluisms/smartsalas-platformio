@@ -1,5 +1,4 @@
 #include "BLEServerService.h"
-#include "Global.h"
 
 int BLEServerService::__countTypeSensor = 0;
 int BLEServerService::__countTypeActuator = 0;
@@ -146,7 +145,8 @@ BLEDeviceConnect* BLEServerService::connectToDevice(BLEAdvertisedDevice* myDevic
     } 
       
     if(device->pRemoteCharacteristic->canNotify())
-      device->pRemoteCharacteristic->registerForNotify(notifyCallback);
+      device->pRemoteCharacteristic->subscribe(true, notifyCallback);
+      // device->pRemoteCharacteristic->registerForNotify(notifyCallback);
         
     Serial.println("[CONNECTION]: dispositivo conectado ");
     Serial.print("[CONNECTION]: ");
@@ -189,9 +189,11 @@ void BLEServerService::scanDevices()
     for (int i = 0; i < foundDevices.getCount(); i++)
       __filteredDevices.push_back(new BLEAdvertisedDevice(foundDevices.getDevice(i)));
   
-    BLEAdvertisedDevice* disp;
-    for (disp : __filteredDevices)
-      Serial.println(disp->toString().c_str());    
+    // BLEAdvertisedDevice* disp = NULL;
+    for (auto item : __filteredDevices) {
+        BLEAdvertisedDevice* disp = item;
+        Serial.println(disp->toString().c_str());
+    }
 }
 
 void BLEServerService::stopScan() 
@@ -218,7 +220,7 @@ void BLEServerService::populateMap()
         
         if(disp->haveServiceUUID() && disp->isAdvertisingService(SERVICE_UUID))
         {
-          bool deviceConnected = false;
+          // bool deviceConnected = false;
           int index = 0, MAX = 4;
           
           do
@@ -393,7 +395,7 @@ bool BLEServerService::connectToActuator(String uuidDevice)
   
 void BLEServerService::continuousConnectionTask() 
 {  
-  bool longTimeWithoutConnections = false;
+  // bool longTimeWithoutConnections = false;
 
   while (true)
   {
