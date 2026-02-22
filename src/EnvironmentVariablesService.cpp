@@ -95,11 +95,10 @@ void EnvironmentVariablesService::setLastTimeLoadReservations(unsigned long time
 
 void EnvironmentVariablesService::sendDataToActuator(String uuid, String message)
 {
-  Serial.println("==================================");
-  Serial.println("[ENVIRONMENT_VARIABLES]: CONECTANDO AO ATUADOR");
-  Serial.print("[ENVIRONMENT_VARIABLES]: ");
+  Serial.println("[EnvironmentVariablesService::sendDataToActuator()]: CONECTANDO AO ATUADOR");
+  Serial.print("[EnvironmentVariablesService::sendDataToActuator()]: ");
   Serial.println(uuid);
-  Serial.print("[ENVIRONMENT_VARIABLES]: ");
+  Serial.print("[EnvironmentVariablesService::sendDataToActuator()]: ");
   Serial.println(message);
   
   bool dispConnected = __bleServerConfig->connectToActuator(uuid);
@@ -110,8 +109,7 @@ void EnvironmentVariablesService::sendDataToActuator(String uuid, String message
 
     for (const String& packet: subStrings)
     {
-      Serial.println("==================================");         
-      Serial.println("[ENVIRONMENT_VARIABLES] Sendig packet: " + packet);
+      Serial.println("[EnvironmentVariablesService::sendDataToActuator()] Sendig packet: " + packet);
       __bleServerConfig->sendMessageToActuator(packet);
     }
         
@@ -134,8 +132,7 @@ void EnvironmentVariablesService::sendDataToActuator(int typeEquipment, String m
 
   if(!__bleServerConfig->isSensorListed(uuid, TYPE_ACTUATOR))
   {
-    Serial.println("==================================");         
-    Serial.println("[ENVIRONMENT_VARIABLES]: No matching actuator with this uuid: " + uuid);
+    Serial.println("[EnvironmentVariablesService::sendDataToActuator()]: No matching actuator with this uuid: " + uuid);
 
     return;
   }
@@ -228,10 +225,9 @@ void EnvironmentVariablesService::turnOnConditioner(){
 
   __config.lockEnvVariablesMutex();
 
-  Serial.println("==================================");
-  Serial.print("[ENVIRONMENT_VARIABLES]: ");
+  Serial.print("[EnvironmentVariablesService::turnOnConditioner()]: ");
   Serial.println(__monitoringConditioner.estado ? "true" : "false");
-  Serial.println("[ENVIRONMENT_VARIABLES]: LIGANDO CONDICIONADOR");
+  Serial.println("[EnvironmentVariablesService::turnOnConditioner()]: LIGANDO CONDICIONADOR");
 
   if(WiFi.status() != WL_CONNECTED)
     return;
@@ -254,10 +250,9 @@ void EnvironmentVariablesService::turnOfConditioner(){
   
   __config.lockEnvVariablesMutex();
 
-  Serial.println("==================================");
-  Serial.print("[ENVIRONMENT_VARIABLES]: ");
+  Serial.print("[EnvironmentVariablesService::turnOfConditioner()]: ");
   Serial.println(__monitoringConditioner.estado ? "true" : "false");
-  Serial.println("[ENVIRONMENT_VARIABLES]: DESLIGANDO CONDICIONADOR");
+  Serial.println("[EnvironmentVariablesService::turnOfConditioner()]: DESLIGANDO CONDICIONADOR");
 
   if(WiFi.status() != WL_CONNECTED)
     return;
@@ -280,10 +275,9 @@ void EnvironmentVariablesService::turnOnLight(){
   
   __config.lockEnvVariablesMutex();
 
-  Serial.println("==================================");
-  Serial.print("[ENVIRONMENT_VARIABLES]: ");
+  Serial.print("[EnvironmentVariablesService::turnOnLight()]: ");
   Serial.println(__monitoringLight.estado ? "true" : "false");
-  Serial.println("[ENVIRONMENT_VARIABLES]: LIGANDO LUZES");
+  Serial.println("[EnvironmentVariablesService::turnOnLight()]: LIGANDO LUZES");
 
   // ----------------------------------------------------------
   String payload = __utilsService.mountPayload("LZ", "ON", "null");
@@ -300,10 +294,9 @@ void EnvironmentVariablesService::turnOfLight(){
 
   __config.lockEnvVariablesMutex();
 
-  Serial.println("==================================");
-  Serial.print("[ENVIRONMENT_VARIABLES]: ");
+  Serial.print("[EnvironmentVariablesService::turnOfLight()]: ");
   Serial.println(__monitoringLight.estado ? "true" : "false");
-  Serial.println("[ENVIRONMENT_VARIABLES]: DESLIGANDO LUZES");
+  Serial.println("[EnvironmentVariablesService::turnOfLight()]: DESLIGANDO LUZES");
   
   // ----------------------------------------------------------
   String payload = __utilsService.mountPayload("LZ", "OFF", "null");
@@ -373,8 +366,7 @@ struct MonitoringRecord EnvironmentVariablesService::deserealizeData(String mess
   }
   else if(__config.isDebug())
   {
-    Serial.println("==================================");
-    Serial.println("[ENVIRONMENT_VARIABLES] Falha no parse JSON.......");
+    Serial.println("[EnvironmentVariablesService::deserealizeData()] Falha no parse JSON.......");
     Serial.println(error.f_str());
   }
 
@@ -385,8 +377,7 @@ void EnvironmentVariablesService::continuousValidation()
 {
   if(__config.isDebug())
   {
-    Serial.println("==================================");
-    Serial.print("[ENVIRONMENT_VARIABLES]: ");
+    Serial.print("[EnvironmentVariablesService::continuousValidation()]: ");
     Serial.println(__currentTime);
   }
   

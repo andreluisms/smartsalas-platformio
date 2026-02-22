@@ -152,7 +152,6 @@ std::vector<struct HardwareRecord> HTTPService::getHardwares(struct HardwareReco
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.println("[HTTPService::getHardwares()] Falha no parse JSON.......");
                 Serial.println(error.f_str());
             }
@@ -174,7 +173,6 @@ std::vector<struct HardwareRecord> HTTPService::getHardwares(struct HardwareReco
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.print("[HTTPService::getHardwares()] Mensagem: ");
                 Serial.println(doc["message"].as<const char *>());
             }
@@ -183,7 +181,6 @@ std::vector<struct HardwareRecord> HTTPService::getHardwares(struct HardwareReco
 
      if (config.isDebug())
     {
-        Serial.println("==================================");
         Serial.print("[HTTPService::getHardwares()] count hardwares: ");
         Serial.println(hardwares.size());
     }
@@ -258,7 +255,6 @@ bool HTTPService::getMaster(struct HardwareRecord hardware, String &master)
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.println("[HTTPService::getMaster()] Falha no parse JSON.......");
                 Serial.println(error.f_str());
             }
@@ -277,7 +273,6 @@ bool HTTPService::getMaster(struct HardwareRecord hardware, String &master)
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.print("[HTTPService::getMaster()] Mensagem: ");
                 Serial.println(doc["message"].as<const char *>());
             }
@@ -343,7 +338,6 @@ std::vector<struct Reserva> HTTPService::getReservationsToday() {
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.println("[HTTPService::getReservationsToday()] Falha no parse JSON.......");
                 Serial.println(error.f_str());
             }
@@ -363,7 +357,6 @@ std::vector<struct Reserva> HTTPService::getReservationsToday() {
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.print("[HTTPService::getReservationsToday()] Mensagem: ");
                 Serial.println(doc["message"].as<const char *>());
             }
@@ -372,7 +365,6 @@ std::vector<struct Reserva> HTTPService::getReservationsToday() {
 
     if (config.isDebug())
     {
-        Serial.println("==================================");
         Serial.print("[HTTPService::getReservationsToday()] count reservations: ");
         Serial.println(reservas.size());
     }
@@ -398,14 +390,13 @@ struct Reserva HTTPService::deserializeReserve(JsonVariant reserve) {
    res.situacao = reserve["status"].as<String>();
    res.objetivo = reserve["objective"].as<String>();  
 
-   //if (config.isDebug())
-   //{
-        Serial.println("==================================");
+   if (config.isDebug())
+   {
         Serial.print("[HTTPService::deserializeReserve()] horarioInicio: ");
         Serial.println(res.horarioInicio);
         Serial.print("[HTTPService::deserializeReserve()] horarioFim: ");
         Serial.println(res.horarioFim);
-   //}
+   }
 
    return res;
 }
@@ -445,7 +436,6 @@ struct Monitoramento HTTPService::getMonitoringByIdSalaAndEquipamento(String tip
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Falha no parse JSON.......");
                 Serial.println(error.f_str());
             }
@@ -464,7 +454,6 @@ struct Monitoramento HTTPService::getMonitoringByIdSalaAndEquipamento(String tip
 
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.print("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Mensagem: ");
                 Serial.println(doc["message"].as<const char *>());
             }
@@ -518,7 +507,6 @@ bool HTTPService::putMonitoring(struct Monitoramento monitoring) {
         {
                 if (config.isDebug())
                 {
-                    Serial.println("==================================");
                     Serial.println("[HTTPService::putMonitoring()] Falha no parse JSON.......");
                     Serial.println(error.f_str());
                 }
@@ -566,7 +554,6 @@ String HTTPService::getComandosIrByIdSalaAndOperacao(String uuid) {
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.println("[HTTPService::getComandosIrByIdSalaAndOperacao()] Falha no parse JSON.......");
                 Serial.println(error.f_str());
             }
@@ -586,7 +573,6 @@ String HTTPService::getComandosIrByIdSalaAndOperacao(String uuid) {
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.print("[HTTPService::getComandosIrByIdSalaAndOperacao()] Mensagem: ");
                 Serial.println(doc["message"].as<const char *>());
             }
@@ -628,7 +614,6 @@ struct std::vector<Solicitacao> HTTPService::getSolicitacao(String tipoEquipamen
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.println("[HTTPService::getSolicitacao()] Falha no parse JSON.......");
                 Serial.println(error.f_str());
             }
@@ -652,7 +637,6 @@ struct std::vector<Solicitacao> HTTPService::getSolicitacao(String tipoEquipamen
 
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.print("[HTTPService::getSolicitacao()] Mensagem: ");
                 Serial.println(doc["message"].as<const char *>());
             }
@@ -691,7 +675,6 @@ bool HTTPService::putSolicitacao(int idSolicitacao) {
         {
             if (config.isDebug())
             {
-                Serial.println("==================================");
                 Serial.println("[HTTPService::putSolicitacao()] Falha no parse JSON.......");
                 Serial.println(error.f_str());
             }

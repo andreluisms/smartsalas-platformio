@@ -27,18 +27,17 @@ void initBLEClient(String deviceName, DeviceType devType)
   pinMode(LED, OUTPUT);
   deviceType = devType;
 
-  Serial.println("========================================");
-  Serial.println("[BLE_CLIENT]: Set Name Disp");
+  Serial.println("[BLESensorService>>initBLEClient]: Muda nome do dispositivo");
   BLEDevice::init(std::string(deviceName.c_str()));
 
-  Serial.println("[BLE_CLIENT]: Create server");
+  Serial.println("[BLESensorService>>initBLEClient]: cria servidor");
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
 
-  Serial.println("[BLE_CLIENT]: Create Service");
+  Serial.println("[BLESensorService>>initBLEClient]: Cria servico");
   BLEService *pService = pServer->createService(SERVICEUUID);
 
-  Serial.println("[BLE_CLIENT]: Create Characteristic");
+  Serial.println("[BLESensorService>>initBLEClient]: Cria caracteristica");
   // pCharacteristicSensor = pService->createCharacteristic(
   //     CHARACTERISTICUUID,
   //     BLECharacteristic::PROPERTY_READ |
@@ -58,7 +57,7 @@ void initBLEClient(String deviceName, DeviceType devType)
 
   pCharacteristicSensor->setCallbacks(new MyCallbacks());
 
-  Serial.println("[BLE_CLIENT]: Start Service");
+  Serial.println("[BLESensorService>>initBLEClient]: Inicia servico");
   pService->start();
 
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
@@ -67,7 +66,7 @@ void initBLEClient(String deviceName, DeviceType devType)
   pAdvertising->setMinPreferred(0x0);
   BLEDevice::startAdvertising();
 
-  Serial.println("Waiting a client connection to notify...");
+  Serial.println("[BLESensorService>>initBLEClient]: Esperando conexao do cliente para notificar...");
 }
 
 void MyServerCallbacks::onConnect(BLEServer *pServer)
@@ -80,8 +79,7 @@ void MyServerCallbacks::onConnect(BLEServer *pServer)
   deviceConnected = true;
   SEND_DATA = false;
 
-  Serial.println("===============================================");
-  Serial.println("[BLESensorService] CONECTADO");
+  Serial.println("[MyServerCallbacks::onConnect()] Conectado");
 
   delay(100);
 }
@@ -90,8 +88,7 @@ void MyServerCallbacks::onDisconnect(BLEServer *pServer)
 {
   deviceConnected = false;
   digitalWrite(LED, LOW);
-  Serial.println("===============================================");
-  Serial.println("[BLESensorService] DESCONECTADO");
+  Serial.println("[MyServerCallbacks::onDisconnect()] Desconectado");
 
   ESP.restart();
 }
@@ -100,8 +97,7 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic)
 {
 
   std::string response = pCharacteristic->getValue();
-  Serial.println("===============================================");
-  Serial.println("[BLESensorService] Receive packet: " + String(response.c_str()));
+  Serial.println("[MyCallbacks::onWrite()] Recebeu pacote: " + String(response.c_str()));
 
   if (String(GET_DATA).equals(response.c_str()))
   {
@@ -111,8 +107,7 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic)
   {
     if (String(END_DATA).equals(response.c_str()))
     {
-      Serial.println("===============================================");
-      Serial.println("[BLESensorService] ATUADOR - (ONWRITE) COMMANDO PARA O EQUIPAMENTO");
+      Serial.println("[MyCallbacks::onWrite()] ATUADOR - (ONWRITE) COMMANDO PARA O EQUIPAMENTO");
       SEND_DATA = true;
       COMMAND = receivedData;
 

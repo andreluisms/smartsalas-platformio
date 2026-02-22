@@ -21,7 +21,7 @@ void AwaitHttpService::awaitSolicitation(void* _this){
     while(true){
         if(WiFi.status() == WL_CONNECTED){
             if (__configAcess.isDebug())
-                Serial.println("[AwaitHttpService::startAwait()] Start");
+                Serial.println("[AwaitHttpService::startAwait()] Inicio");
 
             solicitacao = __httpService.getSolicitacao(MONITORAMENTO);
             
@@ -30,7 +30,7 @@ void AwaitHttpService::awaitSolicitation(void* _this){
             }
 
             if (__configAcess.isDebug())
-                Serial.println("[AwaitHttpService::startAwait()] End");
+                Serial.println("[AwaitHttpService::startAwait()] Fim");
         }
         
         vTaskDelay(pdMS_TO_TICKS(500));
@@ -38,7 +38,7 @@ void AwaitHttpService::awaitSolicitation(void* _this){
 }
 
 bool AwaitHttpService::connectToActuator(String uuidDevice) {
-  Serial.println("[AwaitHttpService::connectToActuator()]: connectToActuator ACTUATOR : " + uuidDevice);
+  Serial.println("[AwaitHttpService::connectToActuator()]: Atuador : " + uuidDevice);
   bool deviceConnected = false;
   int i = 0;
   int count = 8;
@@ -46,10 +46,8 @@ bool AwaitHttpService::connectToActuator(String uuidDevice) {
   do{ 
     i++;
     
-    if (__configAcess.isDebug()){
-      Serial.print("[AwaitHttpService::connectToActuator()]: attempt number: ");
-      Serial.println(i);
-    }
+    if (__configAcess.isDebug())
+      Serial.print("[AwaitHttpService::connectToActuator()]: numero da tentativa: " + i);
     
     deviceConnected = __bleConfiguration->connectToActuator(uuidDevice);
     
@@ -61,7 +59,7 @@ bool AwaitHttpService::connectToActuator(String uuidDevice) {
   } while(i < count);
 
   if( i >= count && !deviceConnected)
-      Serial.println("[AwaitHttpService::connectToActuator()]: device not found");
+      Serial.println("[AwaitHttpService::connectToActuator()]: dispositivo nao encontrado");
 
   return deviceConnected;
 }
@@ -84,12 +82,12 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
 
     if(dispConnected){
         String payload = getMessageToSend(request);
-        Serial.println("[AwaitHttpService::executeSolicitation()] Sendig Payload: " + payload);
+        Serial.println("[AwaitHttpService::executeSolicitation()] Enviando payload: " + payload);
 
         std::vector<String> subStrings = __utils.splitPayload(payload, MAX_LENGTH_PACKET);
 
         for (const String& packet : subStrings){       
-            Serial.println("[AwaitHttpService::executeSolicitation()] Sendig packet: " + packet);
+            Serial.println("[AwaitHttpService::executeSolicitation()] Enviando packet: " + packet);
             __bleConfiguration->sendMessageToActuator(packet);
         }
 
@@ -146,6 +144,6 @@ void AwaitHttpService::awaitsReturn()
   { 
       delay(1000);
       if (__configAcess.isDebug())
-        Serial.print("[AwaitHttpService::awaitsReturn()] TIME AWAITS: " + millis());
+        Serial.print("[AwaitHttpService::awaitsReturn()] TIME: " + millis());
   }    
 }

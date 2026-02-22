@@ -89,8 +89,7 @@ void EquipmentService::SendIrComand(vector<int> codigo) {
     k++;
   }
 
-  Serial.println("==================================");
-  Serial.println("[EquipmentService] Command Size: " +  String(codigo.size()));
+  Serial.println("[EquipmentService::SendIrComand()] Command Size: " +  String(codigo.size()));
   irsend.sendRaw(rawData, codigo.size(), 38); // envia comando IR para o equipamento
   delay(1000);
 }
@@ -129,7 +128,7 @@ void EquipmentService::turnOnLights() {
   /*
      Ligando luzes
   */
-  Serial.println("LIGANDO");
+  Serial.println("[EquipmentService::turnOnLights()]: LIGANDO");
 
   __lightOn = true;
   digitalWrite(RELE, HIGH);
@@ -142,7 +141,7 @@ void EquipmentService::turnOffLights() {
   /*
      Desligando luzes
   */
-  Serial.println("DESLIGANDO");
+  Serial.println("[EquipmentService::turnOffLights()]: DESLIGANDO");
 
   __lightOn = false;
   digitalWrite(RELE, LOW);
@@ -150,16 +149,14 @@ void EquipmentService::turnOffLights() {
 
 String EquipmentService::executeActionFromController(String data) {
 
-  Serial.println("==================================");
-  Serial.print("[EquipmentService] executar comando recebidos do controlador : ");
+  Serial.print("[EquipmentService::executeActionFromController()] executar comando recebidos do controlador : ");
 
   DynamicJsonDocument doc(2048);
   DeserializationError error = deserializeJson(doc, data);
 
   if (error)
   {
-    Serial.println("==================================");
-    Serial.println("[EquipmentService] Erro ao deserializar objeto ");
+    Serial.println("[EquipmentService::executeActionFromController()] Erro ao deserializar objeto ");
 
     return "ERROR";
   }
@@ -180,8 +177,7 @@ String EquipmentService::executeActionFromController(String data) {
   }
   else if (type.equals("AC"))
   {
-    Serial.print("[EquipmentService] Command: " + String(command));
-    Serial.println("==================================");
+    Serial.print("[EquipmentService::executeActionFromController()] Command: " + String(command));
     return executeActionIntoConditioner(command, state);
   }
 
@@ -198,7 +194,7 @@ String EquipmentService::executeActionIntoConditioner(String command, String sta
 
   do
   {
-      Serial.println("[EquipmentService] Enviando comando, tentativa: " + attempt);
+      Serial.println("[EquipmentService::executeActionIntoConditioner()] Enviando comando, tentativa: " + attempt);
 
       SendIrComand(codigo);
       isOn = checkIrms();
@@ -209,7 +205,7 @@ String EquipmentService::executeActionIntoConditioner(String command, String sta
 
   } while (!isSuccessful && attempt < config.getCommandSendAttempts());
 
-  Serial.println("[EquipmentService] Comando finalizado, Sucesso: " + isSuccessful);
+  Serial.println("[EquipmentService::executeActionIntoConditioner()] Comando finalizado, Sucesso: " + isSuccessful);
 
   return isOn ? AC_ON : AC_OFF;
 }

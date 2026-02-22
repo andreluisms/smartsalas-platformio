@@ -57,19 +57,17 @@ void ClientSocketService::serverListener() {
             
             if (configuration.isDebug())
             {
-                Serial.println("=======================================");
-                Serial.println("[ClientSocketService] mensagem recebida");
-                Serial.println("[ClientSocketService] mensagem: " + msg);
+                Serial.println("[ClientSocketService::serverListener()] mensagem recebida");
+                Serial.println("[ClientSocketService::serverListener()] mensagem: " + msg);
             }
 
             MonitoringRequest request = deserealizeObject(msg);
             
             if (configuration.isDebug())
             {
-                Serial.println("=======================================");
-                Serial.println("[ClientSocketService] type: " + request.type);
-                Serial.println("[ClientSocketService] code: " + request.code);
-                Serial.println("[ClientSocketService] uuid: " + request.uuid);
+                Serial.println("[ClientSocketService::serverListener()] type: " + request.type);
+                Serial.println("[ClientSocketService::serverListener()] code: " + request.code);
+                Serial.println("[ClientSocketService::serverListener()] uuid: " + request.uuid);
             }
             
             if (request.type == CONDICIONADOR || request.type == LUZES) { 
@@ -99,10 +97,9 @@ void ClientSocketService::serverListener() {
 
                 if (configuration.isDebug())
                 {
-                  Serial.println("==================================");
-                  Serial.println("[ClientSocketService] Resposta BLE");
-                  Serial.println("[ClientSocketService] recebeu retorno: " + __messageReturned);
-                  Serial.println("[ClientSocketService] mensagem: " + __message);
+                  Serial.println("[ClientSocketService::serverListener()] Resposta BLE");
+                  Serial.println("[ClientSocketService::serverListener()] recebeu retorno: " + __messageReturned);
+                  Serial.println("[ClientSocketService::serverListener()] mensagem: " + __message);
                 }
 
                 __messageReturned = false;
@@ -150,7 +147,7 @@ bool ClientSocketService::connectToActuator(String uuidDevice)
     
     if (configuration.isDebug())
     {
-      Serial.print("[ClientSocketService]: attempt number: ");
+      Serial.print("[ClientSocketService::connectToActuator()]: attempt number: ");
       Serial.println(i);
     }
     
@@ -162,7 +159,7 @@ bool ClientSocketService::connectToActuator(String uuidDevice)
   } while(i < count);
 
   if( i >= count && !deviceConnected)
-      Serial.println("[ClientSocketService]: device not found");
+      Serial.println("[ClientSocketService::connectToActuator()]: device not found");
 
   return deviceConnected;
 }
@@ -176,7 +173,7 @@ void ClientSocketService::awaitsReturn()
       delay(1000);
       if (configuration.isDebug())
       {    
-        Serial.print("[ClientSocketService] TIME AWAITS: ");
+        Serial.print("[ClientSocketService::awaitsReturn()] TIME AWAITS: ");
         Serial.println(millis());
       }
   }    

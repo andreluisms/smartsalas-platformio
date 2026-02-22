@@ -15,7 +15,7 @@ void Hardware::restart()
     Config config;
     if (config.isDebug())
     {
-        Serial.println("[Hardware] Reiniciando o dispositivo.......");
+        Serial.println("[Hardware::restart()] Reiniciando o dispositivo.......");
     }
 
     delay(2000);
