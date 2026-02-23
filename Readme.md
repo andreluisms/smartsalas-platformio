@@ -21,4 +21,4 @@
 
 ```bash
 git clone https://github.com/andreluisms/smartsalas-platformio.git
-cd smartsalas-platformio
+cd smartsalas-platformiogi

@@ -16,15 +16,17 @@ Config::Config(){
     __tokenApp  = "594ac3eb82b5080393ad5c426f61c1ed5ac53f90e1abebc15316888cf1c8f5fe";
     __url       = "http://itetech-001-site4.qtempurl.com/api";
     __debug     = true;
-    __ssid      = "TransmissaoAula";
-    __password  = "#ufstransmissao#";
+    __ssid      = "smartsala01";
+    __password  = "senha";
     __basetime  = 180000;
     __ledStatus = 2;
-    __type  = TYPE_CONTROLLER;
+    __type  = TYPE_SENSOR;
     __route = 2;
-    __wifiFailAttempts = 30;
+    __wifiFailAttempts = 5;
     __commandSendAttempts = 3;
     __timesToHasOne = 3;
+    // quando false, solicita o ssid e password ao usuário via serial monitor
+    __defaultssid = false;
     
     pinMode(__ledStatus, OUTPUT);
 }
@@ -39,14 +41,28 @@ String Config::getUrl()
 	return __url;
 }
 
+bool Config::isDefaultssid(){
+  return __defaultssid;
+}
+
 String Config::getSSID()
 {
 	return __ssid;
 }
 
+void Config::setSSID(String ssid)
+{
+	__ssid = ssid;
+}
+
 String Config::getPassword()
 {
 	return __password;
+}
+
+void Config::setPassword(String password)
+{
+	__password = password;
 }
 
 int	Config::getBaseTime()

@@ -41,6 +41,8 @@ class Config
         String __url;
         String __ssid;
         String __password;
+        // 1 para usar o default ssid, 0 para solicitar um novo ao usuário
+        bool   __defaultssid;
         int    __ledStatus;
         int    __basetime;
         bool   __debug;
@@ -60,9 +62,12 @@ class Config
         String getUrl();
         String getSSID();
         String getPassword();
+        void setSSID(String ssid);
+        void setPassword(String password);
         int    getType();
         int    getBaseTime();
         int    getLedStatus();
+        bool   isDefaultssid();
         bool   isDebug();
         int    getRoute();        
         // Informa o número máximo de falhas de tentativas de conexão ao wifi
