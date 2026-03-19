@@ -1,59 +1,73 @@
-#include "Global.h"
-#include "Structs.h"
-#include "WiFiService.h"
-#include "Controller.h"
 #include "Config.h"
 
-#define RELE 19
-
-HardwareRecord hardware;
+HardwareRecord hardwareSensor;
+MonitoringRecord monitoringRecord;
 WiFiService wiFiService;
 Controller controller;
 String master = "";
-
-bool SEND_DATA = false;
 String COMMAND;
-const uint16_t kIrLed = 12;
-IRsend irsend(kIrLed); 
+bool SEND_DATA = false;
+Config conf;
+
+DHT dht(4, DHT11);
+float temperature; 
+const int portaPresenca = GPIO_NUM_12;
+
+int qtdDetectouPresenca = 0;
 
 void setup() {
+	
+  Serial.begin(115200);
+  bool init = false;
 
-	Serial.begin(115200);
-  pinMode(RELE, OUTPUT);
-	irsend.begin();
-	bool init = false;
+  wiFiService.connect();
 
-	wiFiService.connect();
+  do {
+    if ( controller.start(hardwareSensor) ) {
+      if ( controller.registerHardware(hardwareSensor) ) {
+        if(controller.getMaster(hardwareSensor, master))
+        {
+          Serial.print("master: ");
+          Serial.println(master);
+          init = true;
+        }
+        
+        controller.setHardwareConfig(hardwareSensor);
+      }
+    }
+  } while( !init );
+  
+  wiFiService.disconnect();
 
-	do {
-		if ( controller.start(hardware) ) {
-			if ( controller.registerHardware(hardware) ) {
-				if(controller.getMaster(hardware, master))
-				{
-					Serial.print("master: ");
-					Serial.println(master);
-					init = true;
-				}
-				controller.setHardwareConfig(hardware);
+  pinMode(portaPresenca, INPUT);
 
-			}
-		}
-	} while( !init ); 
-
-	wiFiService.disconnect();
-
-    controller.setupBLEClient("ESP_ATUADOR", ATUADOR);  
+  controller.setupBLEClient("ESP_SENSOR_" + hardwareSensor.id, SENSOR);
 }
 
 void loop() {
-  
-  Serial.println("[Loop] Await message"); 
-  
-  if(SEND_DATA) {
-    Serial.println("[Loop] FOWARD TO SEND COMMAND"); 
-    controller.ExecuteCommand(COMMAND);
-    SEND_DATA = false;
+  Serial.println("[INO]: loop");
+    
+  bool leitura = digitalRead(portaPresenca);
+  temperature = dht.readTemperature();
+
+  if(leitura) {
+    qtdDetectouPresenca++;
   }
 
-  delay(200);
+  if(SEND_DATA) {
+		
+    Serial.println("[INO]: data solicited ");
+
+    monitoringRecord.hasPresent = qtdDetectouPresenca >= conf.getTimesToHasOne() ? "S" : "N";
+        
+    monitoringRecord.temperature = temperature;
+    
+    controller.sendDataOfMonitoring(monitoringRecord);
+        
+    SEND_DATA = false;
+        
+    qtdDetectouPresenca = 0;
+  }
+
+  delay(1000);
 }
