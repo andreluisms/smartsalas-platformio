@@ -1,4 +1,6 @@
 #include "Config.h"
+#include "Controller.h"
+#include "DHT.h"
 
 HardwareRecord hardwareSensor;
 MonitoringRecord monitoringRecord;
