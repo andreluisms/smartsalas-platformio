@@ -103,6 +103,10 @@ bool Controller::getMaster(HardwareRecord hardware, String &master){
 void Controller::sendDataOfMonitoring(MonitoringRecord monitoringRecord){
     // Monta a string com os dados de monitoramento
     String data = __utilService.mountDataMonitoring(monitoringRecord);
+
+    Serial.println("[Controller::sendDataOfMonitoring] Dados de monitoramento gerados:");
+    Serial.println(data);
+
      // Envia os dados para o servidor
     sendDataToServer(data);
 }

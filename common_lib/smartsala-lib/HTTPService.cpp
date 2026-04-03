@@ -118,7 +118,7 @@ bool HTTPService::registerHardware(HardwareRecord hardware){
 }
 
 std::vector<struct HardwareRecord> HTTPService::getHardwares(struct HardwareRecord hardware)
-{
+{   
     String route;
     std::vector<struct HardwareRecord> hardwares;
 
@@ -429,7 +429,7 @@ struct Monitoramento HTTPService::getMonitoringByIdSalaAndEquipamento(String tip
                 
     if (strstr(response.c_str(), "[ERROR]") == NULL && strstr(response.c_str(), "[NO_CONTENT]") == NULL)
     {
-        DynamicJsonDocument doc(512);
+        DynamicJsonDocument doc(2048);
         DeserializationError error = deserializeJson(doc, response);
         
         if (error)

@@ -72,7 +72,7 @@ BLEDeviceConnect *BLEServerService::connectToDevice(BLEAdvertisedDevice *myDevic
     return device;
   }
 
-  delay(200);
+  delay(1000);
 
   Serial.println("[BLEServerService::connectToDevice()]: Conectado ao disp");
   device->pRemoteService = device->pClient->getService(SERVICE_UUID);
@@ -88,7 +88,7 @@ BLEDeviceConnect *BLEServerService::connectToDevice(BLEAdvertisedDevice *myDevic
     return device;
   }
 
-  delay(200);
+  delay(1000);
 
   Serial.println("[BLEServerService::connectToDevice()]: Servico encontrado");
   device->pRemoteCharacteristic = device->pRemoteService->getCharacteristic(CHARACTERISTIC_UUID);
@@ -109,32 +109,21 @@ BLEDeviceConnect *BLEServerService::connectToDevice(BLEAdvertisedDevice *myDevic
   if (validateConnection)
   {
     Serial.println("[BLEServerService::connectToDevice()]: Conexao valida");
-    delay(500);
-    if (device->pRemoteCharacteristic->canRead())
+    delay(1500);
+    if (device->pRemoteCharacteristic->canNotify())
     {
-      Serial.println("[BLEServerService::connectToDevice()]: Caracteristica lida");
-      delay(500);
-      std::string value = device->pRemoteCharacteristic->readValue();
+      Serial.println("[BLEServerService::connectToDevice()]: Ativando notify");
+      device->pRemoteCharacteristic->subscribe(true, notifyCallback);
 
-      Serial.print("[BLEServerService::connectToDevice()]: uuid pesquisado: ");
-      Serial.println(value.c_str());
+      delay(200);
 
-      if (!isAtuador(value.c_str()) && !isSensor(value.c_str()))
-      {
-        Serial.println("[BLEServerService::connectToDevice()]: dispositivo nao encontrado ");
-        device->pClient->disconnect();
-        device->deviceFound = false;
-
-        return device;
-      }
-
-      device->uuid = value.c_str();
-      Serial.print("[BLEServerService::connectToDevice()]: uuid the device: ");
-      Serial.println(device->uuid.c_str());
+      Serial.println("[BLEServerService::connectToDevice()]: Solicitando dados (GET_DATA)");
+      device->pRemoteCharacteristic->writeValue("GET_DATA");
     }
     else
     {
-      Serial.println("[BLEServerService::connectToDevice()]: dispositivo nao encontrado ");
+      Serial.println("[BLEServerService::connectToDevice()]: Caracteristica nao tem notify");
+      
       device->pClient->disconnect();
       device->deviceFound = false;
 
@@ -206,6 +195,7 @@ void BLEServerService::stopScan()
 */
 void BLEServerService::populateMap()
 {
+
   for (auto disp : __filteredDevices)
   {
     if (__configuration.isDebug())

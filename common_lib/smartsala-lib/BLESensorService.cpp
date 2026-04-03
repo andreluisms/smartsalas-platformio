@@ -71,10 +71,9 @@ void initBLEClient(String deviceName, DeviceType devType)
 
 void MyServerCallbacks::onConnect(BLEServer *pServer)
 {
-
   digitalWrite(LED, HIGH);
   pCharacteristicSensor->setValue(__environmentVariableService.getHardware().uuid.c_str());
-  pCharacteristicSensor->notify();
+  // pCharacteristicSensor->notify();
 
   deviceConnected = true;
   SEND_DATA = false;
