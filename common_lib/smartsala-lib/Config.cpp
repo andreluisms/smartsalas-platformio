@@ -1,4 +1,5 @@
 #include "Config.h"
+#include "UtilsService.h"
 
 String __url;
 String __ssid;
@@ -16,11 +17,11 @@ Config::Config(){
     __tokenApp  = "594ac3eb82b5080393ad5c426f61c1ed5ac53f90e1abebc15316888cf1c8f5fe";
     __url       = "http://itetech-001-site4.qtempurl.com/api";
     __debug     = true;
-    __ssid      = "smartsala01";
-    __password  = "senha";
+    __ssid      = "U.W.N";
+    __password  = "1011122025";
     __basetime  = 180000;
     __ledStatus = 2;
-    __type  = TYPE_SENSOR;
+    __type  = TYPE_CONTROLLER;
     __route = 2;
     __wifiFailAttempts = 5;
     __commandSendAttempts = 3;

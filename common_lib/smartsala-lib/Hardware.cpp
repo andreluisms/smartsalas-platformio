@@ -18,7 +18,7 @@ void Hardware::restart()
         Serial.println("[Hardware::restart()] Reiniciando o dispositivo.......");
     }
 
-    delay(2000);
+    delay(4000);
     ESP.restart();
 }
 
