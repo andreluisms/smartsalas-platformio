@@ -3,48 +3,12 @@
 #include "Config.h"
 #include "Structs.h"
 #include "WiFiService.h" 
+#include "WiFi.h"
 
 BLEServerService* bleConfig; 
 HardwareRecord hardware;
 Controller controller;
 WiFiService wiFiService;
-
-
-String leituraSimples(bool ocultar){
-  String resp = "";
-  while (Serial.available()) Serial.read();
-  while (true) {
-      if (Serial.available()) {
-          char c = Serial.read();
-          if (c == '\r') continue;  
-          if (c == '\n') {
-            Serial.println();
-            break;
-          }
-          if (c == 8 || c == 127) { 
-              if (resp.length() > 0) {
-                  resp.remove(resp.length() - 1);
-                  Serial.print("\b \b");
-              }
-              continue;
-          }
-
-          resp += c;
-          Serial.print(ocultar ? '*' : c);
-      }
-      vTaskDelay(pdMS_TO_TICKS(10));
-  }
-  return resp;
-}
-
-void configurarPA(){
-    if (!config.isDefaultssid()){
-      Serial.print("Entre com o SSID: ");
-      config.setSSID(leituraSimples(false));
-      Serial.print("Entre com o password: ");
-      config.setPassword(leituraSimples(false));
-    }
-}
 
 
 void setup() {
@@ -53,8 +17,11 @@ void setup() {
   delay(1000);
 	bool init = false;
 
-  configurarPA();
   wiFiService.connect();
+  //adicionando logs para ajudar no debug
+  Serial.println("[CONTROLADOR][INIT] Wi-Fi conectado");
+  Serial.println("[CONTROLADOR][INIT] MAC: " + WiFi.macAddress());
+  Serial.println("[CONTROLADOR][INIT] IP: " + WiFi.localIP().toString());
 	do {
     if ( controller.start(hardware) ) {
 			if ( controller.registerHardware(hardware) ) {
@@ -69,15 +36,21 @@ void setup() {
 		}
 	} while( !init ); 
 
+  Serial.println("[CONTROLADOR][INIT] Hardware ID: " + String(hardware.id));
+  Serial.println("[CONTROLADOR][INIT] Configuracao carregada");
+
   // Configure BLE Service
   controller.setupBLEServer();
+  Serial.println("[CONTROLADOR][INIT] BLE configurado");
   controller.startBLETaskServer();	
+  Serial.println("[CONTROLADOR][INIT] Task do servidor BLE iniciada");
 
   // Configure Http Service
   controller.startTaskHttp();
 
   // Configure Environment Variables Service
   controller.setupEnvironmentVariables();
+  Serial.println("[CONTROLADOR][INIT] Sistema pronto");
 }
 
 void loop() {

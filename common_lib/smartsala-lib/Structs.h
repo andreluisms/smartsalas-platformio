@@ -26,6 +26,7 @@ struct BLEDeviceConnect
 {
   BLEClient* pClient;
   BLERemoteCharacteristic* pRemoteCharacteristic;
+  BLERemoteCharacteristic* pRemoteHardwareCharacteristic;
   BLERemoteService* pRemoteService;
   String uuid = "";
   bool deviceFound = true;

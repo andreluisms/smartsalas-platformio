@@ -28,6 +28,7 @@ void setup() {
 
 	Serial.begin(115200);
   pinMode(RELE, OUTPUT);
+  pinMode(portaPresenca, INPUT);
 	irsend.begin();
   dht.begin();
 	bool init = false;
@@ -58,8 +59,18 @@ void loop() {
 
   Serial.println("[INO]: data solicited ");
   
+  
   bool leitura = digitalRead(portaPresenca);
   temperature = dht.readTemperature();
+
+  Serial.print("[SENSOR] Presenca: ");
+  Serial.println(leitura ? "SIM" : "NAO");
+  Serial.print("[SENSOR] Temperatura: ");
+  if (isnan(temperature)) {
+    Serial.println("ERRO na leitura");
+  } else {
+    Serial.println(temperature);
+  }
 
   if(leitura) {
     qtdDetectouPresenca++;
@@ -72,6 +83,11 @@ void loop() {
     monitoringRecord.hasPresent = qtdDetectouPresenca > 0 ? "S" : "N";
 
     monitoringRecord.temperature = temperature;
+
+    Serial.print("[SENSOR] Enviando temperatura: ");
+    Serial.println(monitoringRecord.temperature);
+    Serial.print("[SENSOR] Enviando presenca: ");
+    Serial.println(monitoringRecord.hasPresent);
 
     controller.sendDataOfMonitoring(monitoringRecord);
 

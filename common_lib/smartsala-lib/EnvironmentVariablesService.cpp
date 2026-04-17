@@ -375,6 +375,15 @@ struct MonitoringRecord EnvironmentVariablesService::deserealizeData(String mess
 
 void EnvironmentVariablesService::continuousValidation()
 {
+  if (BLE_BUSY) //controle para evitar que a tarefa de validação de variáveis de ambiente interfira em operações BLE críticas, como conexões ou transferências de dados
+  {
+    if(__config.isDebug())
+      Serial.println("[EnvironmentVariablesService::continuousValidation()]: BLE em andamento, pulando validacao de ambiente");
+
+    vTaskDelay(pdMS_TO_TICKS(10000));
+    return;
+  }
+
   if(__config.isDebug())
   {
     Serial.print("[EnvironmentVariablesService::continuousValidation()]: ");
