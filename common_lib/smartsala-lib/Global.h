@@ -27,5 +27,6 @@ extern String ENV_MESSAGE;
 
 extern bool HTTP_REQUEST;
 extern bool ENV_REQUEST;
+extern volatile bool BLE_BUSY;
 
 #endif

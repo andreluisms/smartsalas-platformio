@@ -103,10 +103,6 @@ bool Controller::getMaster(HardwareRecord hardware, String &master){
 void Controller::sendDataOfMonitoring(MonitoringRecord monitoringRecord){
     // Monta a string com os dados de monitoramento
     String data = __utilService.mountDataMonitoring(monitoringRecord);
-
-    Serial.println("[Controller::sendDataOfMonitoring] Dados de monitoramento gerados:");
-    Serial.println(data);
-
      // Envia os dados para o servidor
     sendDataToServer(data);
 }
@@ -146,6 +142,7 @@ void Controller::setupEnvironmentVariables(){
 void Controller::fillHardwares(HardwareRecord hardware){
      // Obtém a lista de hardwares associados
     std::vector<struct HardwareRecord> hardwares = __httpservice.getHardwares(hardware);
+    int associatedActuators = 0;
     
      // Percorre cada hardware retornado
     for(struct HardwareRecord r : hardwares){
@@ -154,8 +151,14 @@ void Controller::fillHardwares(HardwareRecord hardware){
             __bleConfig->addSensor(r.uuid);
         else
         // Caso contrário, adiciona como atuador
+        {
             __bleConfig->addActuator(r);
+            associatedActuators++;
+            Serial.println("[CONTROLADOR][ASSOCIADOS] Atuador associado: " + r.uuid);
+        }
     } 
+
+    Serial.println("[CONTROLADOR][ASSOCIADOS] Total de atuadores associados: " + String(associatedActuators));
 }
 
 

@@ -604,6 +604,9 @@ struct std::vector<Solicitacao> HTTPService::getSolicitacao(String tipoEquipamen
     routeService.concat("&todosRegistros=false");
     
     String response = http.request(routeService, type, params);
+    if (config.isDebug()) {
+        Serial.println("[HTTPService][Solicitacao] Resposta recebida: " + String(response.length()) + " bytes");
+    }
     
     if (strstr(response.c_str(), "[ERROR]") == NULL && strstr(response.c_str(), "[NO_CONTENT]") == NULL)
     {

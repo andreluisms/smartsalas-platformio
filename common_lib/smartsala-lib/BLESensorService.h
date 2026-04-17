@@ -20,6 +20,7 @@
 #include "Structs.h"
 
 #define CHARACTERISTICUUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define HARDWARE_UUID_CHARACTERISTICUUID "e6f1e7b0-5f6a-4c5d-9b46-31d2f7a6b9c1"
 #define SERVICEUUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define GET_DATA "GET_DATA"
 #define END_DATA "END_DATA"

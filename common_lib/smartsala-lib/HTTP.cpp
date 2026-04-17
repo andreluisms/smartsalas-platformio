@@ -30,25 +30,25 @@ String HTTP::request(String resource, String type, String params) const{
         HTTPClient http;
       
         if(config.isDebug()) 
-            Serial.println("[HTTP::request()] Conectado");
+            Serial.println("[HTTP] Conectado para requisicao");
       
         url.concat(resource);
   
         if(config.isDebug())
-            Serial.println("[HTTP::request()] URL: " + url + ", tipo: " + type + ", params: " + params);
+            Serial.println("[HTTP] Requisicao " + type + " -> " + url);
     
         http.begin(url.c_str());
         if (type.compareTo("post") == 0){
 
             http.addHeader("Content-Type", "application/json");          
             httpCode = http.POST(params);
-            Serial.println("[HTTP::request()] Code: " + httpCode);
+            Serial.println("[HTTP] Codigo HTTP: " + httpCode);
 
         }else if(type.compareTo("put") == 0){
 
             http.addHeader("Content-Type", "application/json");          
             httpCode = http.PUT(params);
-            Serial.println("[HTTP::request()] Code: " + httpCode);        
+            Serial.println("[HTTP] Codigo HTTP: " + httpCode);       
         
         }else if(type.compareTo("get") == 0){
             httpCode = http.GET();
@@ -69,19 +69,19 @@ String HTTP::request(String resource, String type, String params) const{
         }
       
         if(config.isDebug())
-            Serial.println("[HTTP::request()] Código: " + String(httpCode) + ", resposta: " + response);
+            Serial.println("[HTTP] Finalizada com codigo " + String(httpCode) + " (resposta em " + String(response.length()) + " bytes)");
       
         http.end();
     }else{
       
         if(config.isDebug())
-            Serial.println("[HTTP::request()] Desconectado");
+            Serial.println("[HTTP] Sem Wi-Fi, requisicao nao executada");
       
     }
 
     if(config.isDebug()){
-        Serial.println("[HTTP::request()] HTTP FINALIZADO: " + String(httpCode));
-        Serial.println("[HTTP::request()] WIFI DESCONECTADO: " + String(httpCode));
+        Serial.println("[HTTP] HTTP finalizado: " + String(httpCode));
+        Serial.println("[HTTP] Wi-Fi final: " + String(WiFi.status() == WL_CONNECTED ? "CONECTADO" : "DESCONECTADO"));
     }
 
     return response;
