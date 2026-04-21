@@ -13,7 +13,6 @@ String HTTP::request(String resource, String type, String params) const{
     String url = config.getUrl(); 
     
     resource.trim();
-    resource.toLowerCase();
     
     type.trim();
     type.toLowerCase();

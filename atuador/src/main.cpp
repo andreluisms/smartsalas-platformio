@@ -45,12 +45,22 @@ void setup() {
 
 void loop() {
   
+  handleBLEConnectionState();
   Serial.println("[Loop] Await message"); 
   
   if(SEND_DATA) {
     Serial.println("[Loop] FOWARD TO SEND COMMAND"); 
-    controller.ExecuteCommand(COMMAND);
+    String mensagem = COMMAND;
+    mensagem.trim();
+
+    if (mensagem == "GET_DATA") {
+      Serial.println("[Aviso] Master solicitou dados. Retornando status dos sensores...");
+    } else {
+      controller.ExecuteCommand(mensagem);
+    }
+
     SEND_DATA = false;
+    COMMAND = "";
   }
 
   delay(200);

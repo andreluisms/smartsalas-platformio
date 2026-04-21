@@ -24,6 +24,8 @@ class AwaitHttpService
   private: 
     static void awaitsReturn();
     static String getMessageToSend(Solicitacao request);
+    static void processConditionerSolicitation(Solicitacao request, String code, bool acting);
+    static void processLightsSolicitation(Solicitacao request, bool acting);
     static MonitoringRequest deserealizeObject(String payload);
 
   public: 

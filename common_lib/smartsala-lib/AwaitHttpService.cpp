@@ -26,7 +26,28 @@ void AwaitHttpService::awaitSolicitation(void* _this){
             solicitacao = __httpService.getSolicitacao(MONITORAMENTO);
             
             for (Solicitacao s : solicitacao){
-                executeSolicitation(s);
+                if (s.type == CONDICIONADOR) {
+                    String code = s.code;
+                    bool acting = (s.acting == "True");
+
+                    Serial.println("[AwaitHttpService::awaitSolicitation()] Roteando solicitacao de CONDICIONADOR");
+                    Serial.println("[AwaitHttpService::awaitSolicitation()] code: " + code + ", acting: " + String(acting ? "True" : "False"));
+
+                    processConditionerSolicitation(s, code, acting);
+                }
+                else if (s.type == LUZES) {
+                    bool acting = (s.acting == "True");
+
+                    Serial.println("[AwaitHttpService::awaitSolicitation()] Roteando solicitacao de LUZES");
+                    Serial.println("[AwaitHttpService::awaitSolicitation()] acting: " + String(acting ? "True" : "False"));
+
+                    processLightsSolicitation(s, acting);
+                }
+                else {
+                    Serial.println("[AwaitHttpService::awaitSolicitation()] Tipo nao suportado no payload: " + s.type);
+                }
+
+                __httpService.putSolicitacao(s.id);
             }
 
             if (__configAcess.isDebug())
@@ -68,9 +89,7 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
     __configAcess.lock();
 
     if(!__bleConfiguration->isSensorListed(request.uuid, TYPE_ACTUATOR)) {
-        
-        __httpService.putSolicitacao(request.id);
-        
+        __configAcess.unlock();
         return; 
     }
 
@@ -102,8 +121,6 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
 
     __utils.updateMonitoring(HTTP_MESSAGE);
 
-    __httpService.putSolicitacao(request.id);
-
     if (__configAcess.isDebug())
     {
         Serial.println("[AwaitHttpService::executeSolicitation()] Resposta BLE");
@@ -115,6 +132,20 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
     HTTP_MESSAGE = "";  
 
     __configAcess.unlock();
+}
+
+void AwaitHttpService::processConditionerSolicitation(Solicitacao request, String code, bool acting)
+{
+    request.code = code;
+    request.acting = acting ? "True" : "False";
+    executeSolicitation(request);
+}
+
+void AwaitHttpService::processLightsSolicitation(Solicitacao request, bool acting)
+{
+    request.code = "null";
+    request.acting = acting ? "True" : "False";
+    executeSolicitation(request);
 }
 
 String AwaitHttpService::getMessageToSend(Solicitacao request)

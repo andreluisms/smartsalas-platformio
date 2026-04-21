@@ -2,6 +2,7 @@
 
 static BLECharacteristic* pCharacteristicSensor;  
 static bool deviceConnected;
+static bool oldDeviceConnected = false;
 static BLEServer* pServer;
 EnvironmentVariablesService __environmentVariableService;
 static DeviceType deviceType;
@@ -69,6 +70,22 @@ void initBLEClient(String deviceName, DeviceType devType)
   Serial.println("[BLESensorService>>initBLEClient]: Esperando conexao do cliente para notificar...");
 }
 
+void handleBLEConnectionState()
+{
+  if (!deviceConnected && oldDeviceConnected)
+  {
+    delay(500);
+    pServer->startAdvertising();
+    Serial.println("Bluetooth anunciando novamente...");
+    oldDeviceConnected = deviceConnected;
+  }
+
+  if (deviceConnected && !oldDeviceConnected)
+  {
+    oldDeviceConnected = deviceConnected;
+  }
+}
+
 void MyServerCallbacks::onConnect(BLEServer *pServer)
 {
   digitalWrite(LED, HIGH);
@@ -86,25 +103,26 @@ void MyServerCallbacks::onConnect(BLEServer *pServer)
 void MyServerCallbacks::onDisconnect(BLEServer *pServer)
 {
   deviceConnected = false;
-  digitalWrite(LED, LOW);
-  Serial.println("[MyServerCallbacks::onDisconnect()] Desconectado");
-
-  ESP.restart();
+  Serial.println("[MyServerCallbacks::onDisconnect()] Master Desconectou!");
 }
 
 void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic)
 {
 
   std::string response = pCharacteristic->getValue();
-  Serial.println("[MyCallbacks::onWrite()] Recebeu pacote: " + String(response.c_str()));
+  String mensagem = String(response.c_str());
+  mensagem.trim();
+  Serial.println("[MyCallbacks::onWrite()] Recebeu pacote: " + mensagem);
 
-  if (String(GET_DATA).equals(response.c_str()))
+  if (mensagem == GET_DATA)
   {
-    SEND_DATA = true;
+    Serial.println("[Aviso] Master solicitou dados. Retornando status dos sensores...");
+    if (deviceType == SENSOR)
+      SEND_DATA = true;
   }
   else if (deviceType == ATUADOR)
   {
-    if (String(END_DATA).equals(response.c_str()))
+    if (mensagem == END_DATA)
     {
       Serial.println("[MyCallbacks::onWrite()] ATUADOR - (ONWRITE) COMMANDO PARA O EQUIPAMENTO");
       SEND_DATA = true;
@@ -115,7 +133,7 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic)
     }
     else
     {
-      receivedData = receivedData + response.c_str();
+      receivedData = receivedData + mensagem;
     }
   }
 }
