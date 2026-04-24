@@ -382,7 +382,7 @@ void BLEServerService::sendMessageToActuator(String data)
 
 void BLEServerService::disconnectToActuator()
 {
-  delay(1000);
+  vTaskDelay(pdMS_TO_TICKS(1000));
 
   if (__actuatorConnected->pClient->isConnected())
     __actuatorConnected->pClient->disconnect();
@@ -531,11 +531,11 @@ void BLEServerService::closeConnections(vector<BLEDeviceConnect *> aux)
     Serial.print("[BLEServerService::closeConnections()]: ");
     Serial.println(deviceCon->pClient->getPeerAddress().toString().c_str());
 
-    delay(300);
+    vTaskDelay(pdMS_TO_TICKS(300));
     if (deviceCon->pClient->isConnected())
       deviceCon->pClient->disconnect();
 
-    delay(300);
+    vTaskDelay(pdMS_TO_TICKS(300));
     BLEDevice::deleteClient(deviceCon->pClient);
 
     delete deviceCon;
@@ -585,11 +585,11 @@ void BLEServerService::addActuator(HardwareRecord act)
 void BLEServerService::timer()
 {
   unsigned long tempoLimite = millis() + TIME_CONNECTION;
+  unsigned long nextLog = millis();
 
   while (millis() <= tempoLimite && !HTTP_REQUEST && !ENV_REQUEST)
   {
-
-    if ((millis() % 5000) == 0)
+    if (millis() >= nextLog)
     {
       Serial.println();
       Serial.print("[BLEServerService::timer()]: MARCAÇÃO TEMPORAL: ");
@@ -599,7 +599,10 @@ void BLEServerService::timer()
       Serial.print("[BLEServerService::timer()]: tempo limite: ");
       Serial.println(tempoLimite);
       Serial.println();
+      nextLog = millis() + 5000;
     }
+
+    vTaskDelay(pdMS_TO_TICKS(50));
   };
 }
 

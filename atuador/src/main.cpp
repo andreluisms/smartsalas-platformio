@@ -2,7 +2,7 @@
 #include "Controller.h"
 #include "Config.h"
 
-#define RELE 19
+#define RELE 26
 
 HardwareRecord hardware;
 WiFiService wiFiService;
@@ -12,7 +12,7 @@ String master = "";
 bool SEND_DATA = false;
 String COMMAND;
 const uint16_t kIrLed = 12;
-IRsend irsend(kIrLed); 
+IRsend irsend(kIrLed);
 
 void setup() {
 

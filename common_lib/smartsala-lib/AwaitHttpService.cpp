@@ -26,17 +26,21 @@ void AwaitHttpService::awaitSolicitation(void* _this){
             solicitacao = __httpService.getSolicitacao(MONITORAMENTO);
             
             for (Solicitacao s : solicitacao){
-                if (s.type == CONDICIONADOR) {
+                String requestType = s.type;
+                requestType.trim();
+                requestType.toUpperCase();
+
+                if (requestType == CONDICIONADOR) {
                     String code = s.code;
-                    bool acting = (s.acting == "True");
+                    bool acting = (s.acting == "True" || s.acting == "true" || s.acting == "1");
 
                     Serial.println("[AwaitHttpService::awaitSolicitation()] Roteando solicitacao de CONDICIONADOR");
                     Serial.println("[AwaitHttpService::awaitSolicitation()] code: " + code + ", acting: " + String(acting ? "True" : "False"));
 
                     processConditionerSolicitation(s, code, acting);
                 }
-                else if (s.type == LUZES) {
-                    bool acting = (s.acting == "True");
+                else if (requestType == LUZES || requestType == "LUZ") {
+                    bool acting = (s.acting == "True" || s.acting == "true" || s.acting == "1");
 
                     Serial.println("[AwaitHttpService::awaitSolicitation()] Roteando solicitacao de LUZES");
                     Serial.println("[AwaitHttpService::awaitSolicitation()] acting: " + String(acting ? "True" : "False"));
@@ -75,7 +79,7 @@ bool AwaitHttpService::connectToActuator(String uuidDevice) {
     if(deviceConnected)
       break;
 
-    delay(2000);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
   } while(i < count);
 
@@ -88,7 +92,27 @@ bool AwaitHttpService::connectToActuator(String uuidDevice) {
 void AwaitHttpService::executeSolicitation(Solicitacao request) {
     __configAcess.lock();
 
+    String requestUuid = request.uuid;
+    requestUuid.trim();
+
+    if (requestUuid.length() == 0 || requestUuid == "null" || requestUuid == "NULL")
+    {
+        std::vector<HardwareRecord> actuators = __bleConfiguration->getActuators();
+        if (actuators.size() == 1)
+        {
+            request.uuid = actuators[0].uuid;
+            Serial.println("[AwaitHttpService::executeSolicitation()] UUID nulo no payload, usando atuador unico cadastrado: " + request.uuid);
+        }
+        else
+        {
+            Serial.println("[AwaitHttpService::executeSolicitation()] UUID nulo no payload e sem atuador unico para fallback.");
+            __configAcess.unlock();
+            return;
+        }
+    }
+
     if(!__bleConfiguration->isSensorListed(request.uuid, TYPE_ACTUATOR)) {
+        Serial.println("[AwaitHttpService::executeSolicitation()] Atuador nao mapeado para UUID: " + request.uuid + ", type: " + request.type);
         __configAcess.unlock();
         return; 
     }
@@ -117,7 +141,7 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
     
     HTTP_REQUEST = false;
     
-    delay(2000);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
     __utils.updateMonitoring(HTTP_MESSAGE);
 
@@ -136,6 +160,7 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
 
 void AwaitHttpService::processConditionerSolicitation(Solicitacao request, String code, bool acting)
 {
+    request.type = CONDICIONADOR;
     request.code = code;
     request.acting = acting ? "True" : "False";
     executeSolicitation(request);
@@ -143,6 +168,7 @@ void AwaitHttpService::processConditionerSolicitation(Solicitacao request, Strin
 
 void AwaitHttpService::processLightsSolicitation(Solicitacao request, bool acting)
 {
+    request.type = LUZES;
     request.code = "null";
     request.acting = acting ? "True" : "False";
     executeSolicitation(request);
@@ -173,7 +199,7 @@ void AwaitHttpService::awaitsReturn()
   unsigned long tempoLimite = millis() + 15000;
   while(millis() <= tempoLimite && !HTTP_RECEIVED_DATA)
   { 
-      delay(1000);
+      vTaskDelay(pdMS_TO_TICKS(1000));
       if (__configAcess.isDebug())
         Serial.print("[AwaitHttpService::awaitsReturn()] TIME: " + millis());
   }    
