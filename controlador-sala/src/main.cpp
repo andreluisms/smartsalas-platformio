@@ -18,6 +18,7 @@ void setup() {
 	bool init = false;
 
   wiFiService.connect();
+
   //adicionando logs para ajudar no debug
   Serial.println("[CONTROLADOR][INIT] Wi-Fi conectado");
   Serial.println("[CONTROLADOR][INIT] MAC: " + WiFi.macAddress());

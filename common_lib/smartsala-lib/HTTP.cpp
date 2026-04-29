@@ -28,27 +28,23 @@ String HTTP::request(String resource, String type, String params) const{
     if (WiFi.status() == WL_CONNECTED) {
       
         HTTPClient http;
-      
-        if(config.isDebug()) 
-            Serial.println("[HTTP] Conectado para requisicao");
+        // Serial.println("[HTTP] Conectado para requisicao");
       
         url.concat(resource);
-  
-        if(config.isDebug())
-            Serial.println("[HTTP] Requisicao " + type + " -> " + url);
+        // Serial.println("[HTTP] Requisicao " + type + " -> " + url);
     
         http.begin(url.c_str());
         if (type.compareTo("post") == 0){
 
             http.addHeader("Content-Type", "application/json");          
             httpCode = http.POST(params);
-            Serial.println("[HTTP] Codigo HTTP: " + httpCode);
+            // Serial.println("[HTTP] Codigo HTTP: " + httpCode);
 
         }else if(type.compareTo("put") == 0){
 
             http.addHeader("Content-Type", "application/json");          
             httpCode = http.PUT(params);
-            Serial.println("[HTTP] Codigo HTTP: " + httpCode);       
+            // Serial.println("[HTTP] Codigo HTTP: " + httpCode);
         
         }else if(type.compareTo("get") == 0){
             httpCode = http.GET();
@@ -69,7 +65,10 @@ String HTTP::request(String resource, String type, String params) const{
         }
       
         if(config.isDebug())
-            Serial.println("[HTTP] Finalizada com codigo " + String(httpCode) + " (resposta em " + String(response.length()) + " bytes)");
+        {
+            // Serial.println("[HTTP] Finalizada com codigo " + String(httpCode) + " (resposta em " + String(response.length()) + " bytes)");
+            Serial.println(String("[HTTP] ") + type + " " + resource + " -> " + String(httpCode) + " (" + String(response.length()) + " bytes)");
+        }
       
         http.end();
     }else{
@@ -77,11 +76,6 @@ String HTTP::request(String resource, String type, String params) const{
         if(config.isDebug())
             Serial.println("[HTTP] Sem Wi-Fi, requisicao nao executada");
       
-    }
-
-    if(config.isDebug()){
-        Serial.println("[HTTP] HTTP finalizado: " + String(httpCode));
-        Serial.println("[HTTP] Wi-Fi final: " + String(WiFi.status() == WL_CONNECTED ? "CONECTADO" : "DESCONECTADO"));
     }
 
     return response;
