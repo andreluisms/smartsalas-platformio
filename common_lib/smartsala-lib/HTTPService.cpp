@@ -195,6 +195,7 @@ struct HardwareRecord HTTPService::deserializeDevice(JsonVariant sensor) {
    
    struct HardwareRecord disp;
 
+   disp.id = sensor["id"].as<int>();
    disp.uuid = sensor["uuid"].as<String>();
    disp.typeHardwareId = sensor["tipoHardwareId"].as<int>();
    disp.typeEquipment = sensor["tipoEquipamento"].as<int>(); 
@@ -210,7 +211,7 @@ struct Solicitacao HTTPService::deserializeSolicitacao(int idSolicitacao, String
     DynamicJsonDocument doc(4096);
     deserializeJson(doc, payload);
 
-    solicitacao.id = idSolicitacao;    
+    solicitacao.id = idSolicitacao;
     solicitacao.code = doc["code"].as<const char *>();
     solicitacao.type = doc["type"].as<const char *>();
     solicitacao.uuid = doc["uuid"].as<const char *>();
@@ -628,7 +629,10 @@ struct std::vector<Solicitacao> HTTPService::getSolicitacao(String tipoEquipamen
 
             for (JsonVariant sol : solicitacoesJson)
             {
-                solicitacao.push_back(deserializeSolicitacao(sol["id"].as<int>(), sol["payload"].as<String>()));
+                solicitacao.push_back(deserializeSolicitacao(
+                    sol["id"].as<int>(),
+                    sol["payload"].as<String>()
+                ));
             }
         }
         else

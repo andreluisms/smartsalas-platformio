@@ -11,7 +11,7 @@ String master = "";
 
 bool SEND_DATA = false;
 String COMMAND;
-const uint16_t kIrLed = 12;
+const uint16_t kIrLed = 4;
 IRsend irsend(kIrLed);
 
 void setup() {

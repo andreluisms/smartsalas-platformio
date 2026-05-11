@@ -72,7 +72,7 @@ bool AwaitHttpService::connectToActuator(String uuidDevice) {
     i++;
     
     if (__configAcess.isDebug())
-      Serial.print("[AwaitHttpService::connectToActuator()]: numero da tentativa: " + i);
+      Serial.print("[AwaitHttpService::connectToActuator()]: numero da tentativa: " + String(i));
     
     deviceConnected = __bleConfiguration->connectToActuator(uuidDevice);
     
@@ -92,23 +92,13 @@ bool AwaitHttpService::connectToActuator(String uuidDevice) {
 void AwaitHttpService::executeSolicitation(Solicitacao request) {
     __configAcess.lock();
 
-    String requestUuid = request.uuid;
-    requestUuid.trim();
+    request.uuid = resolveActuatorUuid(request);
 
-    if (requestUuid.length() == 0 || requestUuid == "null" || requestUuid == "NULL")
+    if (request.uuid == "")
     {
-        std::vector<HardwareRecord> actuators = __bleConfiguration->getActuators();
-        if (actuators.size() == 1)
-        {
-            request.uuid = actuators[0].uuid;
-            Serial.println("[AwaitHttpService::executeSolicitation()] UUID nulo no payload, usando atuador unico cadastrado: " + request.uuid);
-        }
-        else
-        {
-            Serial.println("[AwaitHttpService::executeSolicitation()] UUID nulo no payload e sem atuador unico para fallback.");
-            __configAcess.unlock();
-            return;
-        }
+        Serial.println("[AwaitHttpService::executeSolicitation()] Atuador nao encontrado para tipo: " + request.type);
+        __configAcess.unlock();
+        return;
     }
 
     if(!__bleConfiguration->isSensorListed(request.uuid, TYPE_ACTUATOR)) {
@@ -148,7 +138,7 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
     if (__configAcess.isDebug())
     {
         Serial.println("[AwaitHttpService::executeSolicitation()] Resposta BLE");
-        Serial.println("[AwaitHttpService::executeSolicitation()] recebeu retorno: " + HTTP_RECEIVED_DATA);
+        Serial.println("[AwaitHttpService::executeSolicitation()] recebeu retorno: " + String(HTTP_RECEIVED_DATA));
         Serial.println("[AwaitHttpService::executeSolicitation()] mensagem: " + HTTP_MESSAGE);
     }
 
@@ -156,6 +146,50 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
     HTTP_MESSAGE = "";  
 
     __configAcess.unlock();
+}
+
+String AwaitHttpService::resolveActuatorUuid(Solicitacao request)
+{
+    std::vector<HardwareRecord> actuators = __bleConfiguration->getActuators();
+    String requestType = request.type;
+    requestType.trim();
+    requestType.toUpperCase();
+
+    int expectedTypeEquipment = -1;
+    if (requestType == CONDICIONADOR)
+        expectedTypeEquipment = TYPE_CONDITIONER;
+    else if (requestType == LUZES || requestType == "LUZ")
+        expectedTypeEquipment = TYPE_LIGHT;
+    else
+        return "";
+
+    String requestUuid = request.uuid;
+    requestUuid.trim();
+    bool hasPayloadUuid = (requestUuid.length() > 0 && requestUuid != "null" && requestUuid != "NULL");
+    if (hasPayloadUuid)
+    {
+        for (const HardwareRecord& actuator : actuators)
+        {
+            if (actuator.uuid == requestUuid && actuator.typeEquipment == expectedTypeEquipment)
+                return actuator.uuid;
+        }
+    }
+
+    String uniqueUuid = "";
+    int countByType = 0;
+    for (const HardwareRecord& actuator : actuators)
+    {
+        if (actuator.typeEquipment == expectedTypeEquipment)
+        {
+            uniqueUuid = actuator.uuid;
+            countByType++;
+        }
+    }
+
+    if (countByType == 1)
+        return uniqueUuid;
+
+    return "";
 }
 
 void AwaitHttpService::processConditionerSolicitation(Solicitacao request, String code, bool acting)

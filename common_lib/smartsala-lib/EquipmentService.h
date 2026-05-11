@@ -15,7 +15,7 @@
 #include "Global.h"
 #include "Config.h"
 
-#define RELE 19
+#define RELE 26
 #define pinSCT 34 
 #define tensao 127
 #define MAX_SIZE_COMMAND 400

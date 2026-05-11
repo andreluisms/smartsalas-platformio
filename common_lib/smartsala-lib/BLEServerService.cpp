@@ -39,18 +39,21 @@ void BLEServerService::notifyCallback(BLERemoteCharacteristic *pBLERemoteCharact
     Serial.print(" de tamanho " + String(length));
     Serial.println();
     Serial.print("[BLEServerService::notifyCallback()] Dado: ");
-    String data = String(((char *)pData));
-    Serial.println(data.substring(0, length));
+    String data = "";
+    data.reserve(length);
+    for (size_t i = 0; i < length; i++)
+      data += (char)pData[i];
+    Serial.println(data);
 
     if (HTTP_REQUEST)
     {
       HTTP_RECEIVED_DATA = true;
-      HTTP_MESSAGE = data.substring(0, length);
+      HTTP_MESSAGE = data;
     }
     else
     {
       ENV_RECEIVED_DATA = true;
-      ENV_MESSAGE = data.substring(0, length);
+      ENV_MESSAGE = data;
     }
   }
 }
