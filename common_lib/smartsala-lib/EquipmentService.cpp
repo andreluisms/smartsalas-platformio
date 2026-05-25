@@ -67,7 +67,7 @@ void EquipmentService::SplitIrComands(String codigoString, vector <int> &codigo)
     }
     else
     {
-      if (codigoString.charAt(i) != ';' || codigoString.charAt(i) != ' ')
+      if (codigoString.charAt(i) != ';' && codigoString.charAt(i) != ' ')
         temp += codigoString.charAt(i);
     }
   }
@@ -199,7 +199,7 @@ String EquipmentService::executeActionIntoConditioner(String command, String sta
       SendIrComand(codigo);
       isOn = checkIrms();
 
-      isSuccessful = (isOn == state.equals("ON") ? AC_ON : AC_OFF);
+      isSuccessful = (isOn == state.equals("ON"));
   
       attempt++;
       vTaskDelay(pdMS_TO_TICKS(50));

@@ -8,7 +8,7 @@ EnvironmentVariablesService __environmentVariableService;
 static DeviceType deviceType;
 EquipmentService equipmentService;
 static String equipmentState = "";
-static String receivedData = "";
+String Buffer = "";
 
 void sendDataToServer(String data)
 {
@@ -94,6 +94,7 @@ void MyServerCallbacks::onConnect(BLEServer *pServer)
 
   deviceConnected = true;
   SEND_DATA = false;
+  Buffer = "";
 
   Serial.println("[MyServerCallbacks::onConnect()] Conectado");
 
@@ -103,6 +104,7 @@ void MyServerCallbacks::onConnect(BLEServer *pServer)
 void MyServerCallbacks::onDisconnect(BLEServer *pServer)
 {
   deviceConnected = false;
+  Buffer = "";
   Serial.println("[MyServerCallbacks::onDisconnect()] Master Desconectou!");
 }
 
@@ -122,18 +124,16 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic)
   }
   else if (deviceType == ATUADOR)
   {
-    if (mensagem == END_DATA)
-    {
-      Serial.println("[MyCallbacks::onWrite()] ATUADOR - (ONWRITE) COMMANDO PARA O EQUIPAMENTO");
-      SEND_DATA = true;
-      COMMAND = receivedData;
+    Buffer += mensagem;
 
-      equipmentState = "";
-      receivedData = "";
-    }
-    else
+    if (mensagem.indexOf(END_DATA) != -1)
     {
-      receivedData = receivedData + mensagem;
+      Serial.println("[MyCallbacks::onWrite()] ATUADOR - (ONWRITE) COMANDO COMPLETO PARA O EQUIPAMENTO");
+      Buffer.replace(END_DATA, "");
+      COMMAND = Buffer;
+      Buffer = "";
+      equipmentState = "";
+      SEND_DATA = true;
     }
   }
 }
