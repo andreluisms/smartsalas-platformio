@@ -148,17 +148,17 @@ std::vector<struct HardwareRecord> HTTPService::getHardwares(struct HardwareReco
         DynamicJsonDocument doc(2048);
         DeserializationError error = deserializeJson(doc, response);
                          
-        if (error)
-        {
-            if (config.isDebug())
+            if (error)
             {
-                Serial.println("[HTTPService::getHardwares()] Falha no parse JSON.......");
-                Serial.println(error.f_str());
-            }
-            delay(5000);
+                if (config.isDebug())
+                {
+                    Serial.println("[HTTPService::getHardwares()] Falha no parse JSON.......");
+                    Serial.println(error.f_str());
+                }
+                delay(5000);
 
-            return hardwares;
-        }
+                return hardwares;
+            }
 
         if (doc["httpCode"].as<int>() == 200)
         {
@@ -169,20 +169,12 @@ std::vector<struct HardwareRecord> HTTPService::getHardwares(struct HardwareReco
                 hardwares.push_back(deserializeDevice(sensor));
 
         }
-        else
+        else if (config.isDebug())
         {
-            if (config.isDebug())
-            {
-                Serial.print("[HTTPService::getHardwares()] Mensagem: ");
-                Serial.println(doc["message"].as<const char *>());
-            }
+            // Serial.print("[HTTPService::getHardwares()] Mensagem: ");
+            // Serial.println(doc["message"].as<const char *>());
+            Serial.println(String("[HTTPService::getHardwares()] Mensagem: ") + doc["message"].as<const char *>());
         }
-    }
-
-     if (config.isDebug())
-    {
-        Serial.print("[HTTPService::getHardwares()] count hardwares: ");
-        Serial.println(hardwares.size());
     }
 
     return hardwares;
@@ -391,14 +383,6 @@ struct Reserva HTTPService::deserializeReserve(JsonVariant reserve) {
    res.situacao = reserve["status"].as<String>();
    res.objetivo = reserve["objective"].as<String>();  
 
-   if (config.isDebug())
-   {
-        Serial.print("[HTTPService::deserializeReserve()] horarioInicio: ");
-        Serial.println(res.horarioInicio);
-        Serial.print("[HTTPService::deserializeReserve()] horarioFim: ");
-        Serial.println(res.horarioFim);
-   }
-
    return res;
 }
 
@@ -451,12 +435,9 @@ struct Monitoramento HTTPService::getMonitoringByIdSalaAndEquipamento(String tip
         }
         else
         {
-            Serial.println(doc["httpCode"].as<int>());
-
             if (config.isDebug())
             {
-                Serial.print("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Mensagem: ");
-                Serial.println(doc["message"].as<const char *>());
+                Serial.println(String("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Mensagem: ") + doc["message"].as<const char *>());
             }
         }
     }
@@ -605,7 +586,6 @@ struct std::vector<Solicitacao> HTTPService::getSolicitacao(String tipoEquipamen
     routeService.concat("&todosRegistros=false");
     
     String response = http.request(routeService, type, params);
-    
     if (strstr(response.c_str(), "[ERROR]") == NULL && strstr(response.c_str(), "[NO_CONTENT]") == NULL)
     {
         DynamicJsonDocument doc(4096);
@@ -637,12 +617,9 @@ struct std::vector<Solicitacao> HTTPService::getSolicitacao(String tipoEquipamen
         }
         else
         {
-            Serial.println(doc["httpCode"].as<int>());
-
             if (config.isDebug())
             {
-                Serial.print("[HTTPService::getSolicitacao()] Mensagem: ");
-                Serial.println(doc["message"].as<const char *>());
+                Serial.println(String("[HTTPService::getSolicitacao()] Mensagem: ") + doc["message"].as<const char *>());
             }
         }
     }

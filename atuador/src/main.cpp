@@ -9,6 +9,9 @@ WiFiService wiFiService;
 Controller controller;
 String master = "";
 
+unsigned long lastLoopLogMs = 0;
+const unsigned long LOOP_LOG_INTERVAL_MS = 5000;
+
 bool SEND_DATA = false;
 String COMMAND;
 const uint16_t kIrLed = 4;
@@ -17,19 +20,22 @@ IRsend irsend(kIrLed);
 void setup() {
 
 	Serial.begin(115200);
+  delay(300);
+  Serial.println("[ATUADOR][INIT] Boot iniciado");
   pinMode(RELE, OUTPUT);
 	irsend.begin();
 	bool init = false;
 
+	Serial.println("[ATUADOR][INIT] Conectando no Wi-Fi...");
 	wiFiService.connect();
+	Serial.println("[ATUADOR][INIT] Wi-Fi conectado");
 
 	do {
 		if ( controller.start(hardware) ) {
 			if ( controller.registerHardware(hardware) ) {
 				if(controller.getMaster(hardware, master))
 				{
-					Serial.print("master: ");
-					Serial.println(master);
+					Serial.println("[ATUADOR][INIT] Master: " + master);
 					init = true;
 				}
 				controller.setHardwareConfig(hardware);
@@ -38,30 +44,29 @@ void setup() {
 		}
 	} while( !init ); 
 
+	Serial.println("[ATUADOR][INIT] UUID de hardware (backend): " + hardware.uuid);
+	Serial.println("[ATUADOR][INIT] UUID BLE servico: " + String(SERVICEUUID));
+	Serial.println("[ATUADOR][INIT] UUID BLE caracteristica: " + String(CHARACTERISTICUUID));
+
 	wiFiService.disconnect();
+	Serial.println("[ATUADOR][INIT] Configuracao concluida, iniciando BLE");
 
     controller.setupBLEClient("ESP_ATUADOR", ATUADOR);  
 }
 
 void loop() {
-  
-  handleBLEConnectionState();
-  Serial.println("[Loop] Await message"); 
-  
+  //Serial.println((SEND_DATA));
   if(SEND_DATA) {
-    Serial.println("[Loop] FOWARD TO SEND COMMAND"); 
-    String mensagem = COMMAND;
-    mensagem.trim();
-
-    if (mensagem == "GET_DATA") {
-      Serial.println("[Aviso] Master solicitou dados. Retornando status dos sensores...");
-    } else {
-      controller.ExecuteCommand(mensagem);
-    }
-
+		Serial.println("[ATUADOR][CMD] Comando recebido, executando...");
+    controller.ExecuteCommand(COMMAND);
     SEND_DATA = false;
-    COMMAND = "";
+		Serial.println("[ATUADOR][CMD] Comando executado");
   }
 
-  delay(200);
+	if (millis() - lastLoopLogMs >= LOOP_LOG_INTERVAL_MS) {
+		lastLoopLogMs = millis();
+		Serial.println("[ATUADOR][STATUS] Aguardando comandos BLE");
+	}
+
+	delay(800);
 }

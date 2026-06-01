@@ -95,12 +95,6 @@ void EnvironmentVariablesService::setLastTimeLoadReservations(unsigned long time
 
 void EnvironmentVariablesService::sendDataToActuator(String uuid, String message)
 {
-  Serial.println("[EnvironmentVariablesService::sendDataToActuator()]: CONECTANDO AO ATUADOR");
-  Serial.print("[EnvironmentVariablesService::sendDataToActuator()]: ");
-  Serial.println(uuid);
-  Serial.print("[EnvironmentVariablesService::sendDataToActuator()]: ");
-  Serial.println(message);
-  
   bool dispConnected = __bleServerConfig->connectToActuator(uuid);
                 
   if(dispConnected)
@@ -109,7 +103,6 @@ void EnvironmentVariablesService::sendDataToActuator(String uuid, String message
 
     for (const String& packet: subStrings)
     {
-      Serial.println("[EnvironmentVariablesService::sendDataToActuator()] Sendig packet: " + packet);
       __bleServerConfig->sendMessageToActuator(packet);
     }
         
@@ -132,7 +125,8 @@ void EnvironmentVariablesService::sendDataToActuator(int typeEquipment, String m
 
   if(!__bleServerConfig->isSensorListed(uuid, TYPE_ACTUATOR))
   {
-    Serial.println("[EnvironmentVariablesService::sendDataToActuator()]: No matching actuator with this uuid: " + uuid);
+    if(__config.isDebug())
+      Serial.println("[EnvironmentVariablesService::sendDataToActuator()]: No matching actuator with this uuid: " + uuid);
 
     return;
   }
@@ -225,9 +219,12 @@ void EnvironmentVariablesService::turnOnConditioner(){
 
   __config.lockEnvVariablesMutex();
 
-  Serial.print("[EnvironmentVariablesService::turnOnConditioner()]: ");
-  Serial.println(__monitoringConditioner.estado ? "true" : "false");
-  Serial.println("[EnvironmentVariablesService::turnOnConditioner()]: LIGANDO CONDICIONADOR");
+  if(__config.isDebug())
+  {
+    // Serial.print("[EnvironmentVariablesService::turnOnConditioner()]: ");
+    // Serial.println(__monitoringConditioner.estado ? "true" : "false");
+    Serial.println("[EnvironmentVariablesService::turnOnConditioner()]: LIGANDO CONDICIONADOR");
+  }
 
   if(WiFi.status() != WL_CONNECTED)
     return;
@@ -250,9 +247,12 @@ void EnvironmentVariablesService::turnOfConditioner(){
   
   __config.lockEnvVariablesMutex();
 
-  Serial.print("[EnvironmentVariablesService::turnOfConditioner()]: ");
-  Serial.println(__monitoringConditioner.estado ? "true" : "false");
-  Serial.println("[EnvironmentVariablesService::turnOfConditioner()]: DESLIGANDO CONDICIONADOR");
+  if(__config.isDebug())
+  {
+    // Serial.print("[EnvironmentVariablesService::turnOfConditioner()]: ");
+    // Serial.println(__monitoringConditioner.estado ? "true" : "false");
+    Serial.println("[EnvironmentVariablesService::turnOfConditioner()]: DESLIGANDO CONDICIONADOR");
+  }
 
   if(WiFi.status() != WL_CONNECTED)
     return;
@@ -275,9 +275,12 @@ void EnvironmentVariablesService::turnOnLight(){
   
   __config.lockEnvVariablesMutex();
 
-  Serial.print("[EnvironmentVariablesService::turnOnLight()]: ");
-  Serial.println(__monitoringLight.estado ? "true" : "false");
-  Serial.println("[EnvironmentVariablesService::turnOnLight()]: LIGANDO LUZES");
+  if(__config.isDebug())
+  {
+    // Serial.print("[EnvironmentVariablesService::turnOnLight()]: ");
+    // Serial.println(__monitoringLight.estado ? "true" : "false");
+    Serial.println("[EnvironmentVariablesService::turnOnLight()]: LIGANDO LUZES");
+  }
 
   // ----------------------------------------------------------
   String payload = __utilsService.mountPayload("LZ", "ON", "null");
@@ -294,9 +297,12 @@ void EnvironmentVariablesService::turnOfLight(){
 
   __config.lockEnvVariablesMutex();
 
-  Serial.print("[EnvironmentVariablesService::turnOfLight()]: ");
-  Serial.println(__monitoringLight.estado ? "true" : "false");
-  Serial.println("[EnvironmentVariablesService::turnOfLight()]: DESLIGANDO LUZES");
+  if(__config.isDebug())
+  {
+    // Serial.print("[EnvironmentVariablesService::turnOfLight()]: ");
+    // Serial.println(__monitoringLight.estado ? "true" : "false");
+    Serial.println("[EnvironmentVariablesService::turnOfLight()]: DESLIGANDO LUZES");
+  }
   
   // ----------------------------------------------------------
   String payload = __utilsService.mountPayload("LZ", "OFF", "null");
@@ -375,12 +381,14 @@ struct MonitoringRecord EnvironmentVariablesService::deserealizeData(String mess
 
 void EnvironmentVariablesService::continuousValidation()
 {
-  if(__config.isDebug())
+  if (BLE_BUSY) //controle para evitar que a tarefa de validação de variáveis de ambiente interfira em operações BLE críticas, como conexões ou transferências de dados
   {
-    Serial.print("[EnvironmentVariablesService::continuousValidation()]: ");
-    Serial.println(__currentTime);
+    // if(__config.isDebug())
+    //   Serial.println("[EnvironmentVariablesService::continuousValidation()]: BLE em andamento, pulando validacao de ambiente");
+    vTaskDelay(pdMS_TO_TICKS(10000));
+    return;
   }
-  
+
   checkTimeToLoadReservations();
 
   IN_CLASS = getRoomDuringClassTime();

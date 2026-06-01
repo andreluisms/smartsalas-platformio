@@ -1,6 +1,7 @@
 #include "Config.h"
 #include "UtilsService.h"
 
+
 String __url;
 String __ssid;
 String __password;
@@ -21,7 +22,7 @@ Config::Config(){
     __password  = "#ufscolaboradores#";
     __basetime  = 180000;
     __ledStatus = 2;
-    __type  = TYPE_CONTROLLER;
+    __type  = DEVICE_TYPE;
     __route = 2;
     __wifiFailAttempts = 5;
     __commandSendAttempts = 3;

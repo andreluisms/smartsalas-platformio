@@ -2,6 +2,9 @@
 #ifndef Config_h
 #define Config_h
 
+#ifndef DEVICE_TYPE
+#define DEVICE_TYPE TYPE_ACTUATOR 
+#endif
 
 #include <Arduino.h>
 #include <mutex>
