@@ -2,7 +2,7 @@
 #include "Controller.h"
 #include "Config.h"
 
-#define RELE 19
+#define RELE 26
 
 HardwareRecord hardware;
 WiFiService wiFiService;
@@ -14,8 +14,8 @@ const unsigned long LOOP_LOG_INTERVAL_MS = 5000;
 
 bool SEND_DATA = false;
 String COMMAND;
-const uint16_t kIrLed = 12;
-IRsend irsend(kIrLed); 
+const uint16_t kIrLed = 4;
+IRsend irsend(kIrLed);
 
 void setup() {
 

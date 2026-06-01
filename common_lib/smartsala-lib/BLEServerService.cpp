@@ -117,12 +117,12 @@ void BLEServerService::notifyCallback(BLERemoteCharacteristic *pBLERemoteCharact
     if (HTTP_REQUEST)
     {
       HTTP_RECEIVED_DATA = true;
-      HTTP_MESSAGE = data.substring(0, length);
+      HTTP_MESSAGE = data;
     }
     else
     {
       ENV_RECEIVED_DATA = true;
-      ENV_MESSAGE = data.substring(0, length);
+      ENV_MESSAGE = data;
     }
   }
 }
@@ -388,6 +388,12 @@ bool BLEServerService::isSensorListed(String uuid, int typeDisp)
     }
   }
 
+  if (typeDisp == TYPE_ACTUATOR && __devicesMapped.size() == 1 && __actuators.size() == 1 && uuid.equals(__actuators[0].uuid))
+  {
+    Serial.println("[BLEServerService::isSensorListed()]: fallback para atuador unico ativo");
+    return true;
+  }
+
   return false;
 }
 
@@ -409,9 +415,26 @@ bool BLEServerService::connectMyDisp(BLEAdvertisedDevice *device)
       return false;
     }
 
+    String mappedUuid = deviceConnected->uuid;
+    String deviceName = String(device->getName().c_str());
+
+    if (!isSensor(mappedUuid) && !isAtuador(mappedUuid))
+    {
+      if (deviceName.equals("ESP_ATUADOR") && __actuators.size() == 1)
+      {
+        mappedUuid = __actuators[0].uuid;
+        Serial.println("[BLEServerService::connectMyDisp()]: UUID BLE invalido, usando UUID do atuador cadastrado: " + mappedUuid);
+      }
+      else if (deviceName.equals("ESP_SENSOR") && __sensors.size() == 1)
+      {
+        mappedUuid = __sensors[0];
+        Serial.println("[BLEServerService::connectMyDisp()]: UUID BLE invalido, usando UUID do sensor cadastrado: " + mappedUuid);
+      }
+    }
+
     Hardware disp;
     disp.setBLEAdvertisedDevice(device);
-    disp.setUuid(deviceConnected->uuid.c_str());
+    disp.setUuid(mappedUuid.c_str());
 
     bool recognizedType = false; 
 
@@ -421,7 +444,7 @@ bool BLEServerService::connectMyDisp(BLEAdvertisedDevice *device)
       __countTypeSensor++;
       recognizedType = true;
     }
-    else if (isAtuador(deviceConnected->uuid.c_str()))
+    else if (isAtuador(mappedUuid))
     {
       disp.setTypeDisp(TYPE_ACTUATOR);
       __countTypeActuator++;
@@ -465,11 +488,12 @@ void BLEServerService::sendMessageToActuator(String data)
 
 void BLEServerService::disconnectToActuator()
 {
-  delay(1000);
+  vTaskDelay(pdMS_TO_TICKS(1000));
 
   if (__actuatorConnected->pClient->isConnected())
     __actuatorConnected->pClient->disconnect();
 
+  BLEDevice::deleteClient(__actuatorConnected->pClient);
   delete __actuatorConnected;
 }
 
@@ -492,13 +516,25 @@ bool BLEServerService::connectToActuator(String uuidDevice)
     }
   }
 
+  if (!connected && __devicesMapped.size() == 1 && __actuators.size() == 1 && uuidDevice.equals(__actuators[0].uuid))
+  {
+    auto onlyMapped = __devicesMapped.begin();
+    disp = onlyMapped->second;
+
+    Serial.println("[BLEServerService::connectToActuator()]: fallback para atuador unico");
+    Serial.println("[BLEServerService::connectToActuator()]: uuid requisitado: " + uuidDevice);
+    Serial.println("[BLEServerService::connectToActuator()]: uuid mapeado: " + disp.getUuid());
+
+    __actuatorConnected = connectToDevice(disp.getBLEAdvertisedDevice(), false);
+    if (__actuatorConnected->pClient->isConnected())
+      connected = true;
+  }
+
   return connected;
 }
 
 void BLEServerService::continuousConnectionTask()
 {
-  // bool longTimeWithoutConnections = false;
-
   while (true)
   {
     vTaskDelay(pdMS_TO_TICKS(TIME_WAITING_CONNECTION));
@@ -509,15 +545,17 @@ void BLEServerService::continuousConnectionTask()
       BLE_BUSY = true;
       __configuration.lockEnvVariablesMutex();
 
-      __wfService.disconnect();
+      //__wfService.disconnect();
 
       newCicle();
 
-      __wfService.connect();
+      //__wfService.connect();
 
       __configuration.unlockEnvVariablesMutex();
       BLE_BUSY = false;
     }
+
+    vTaskDelay(pdMS_TO_TICKS(TIME_WAITING_CONNECTION));
   }
 }
 
@@ -642,20 +680,24 @@ void BLEServerService::addActuator(HardwareRecord act)
 void BLEServerService::timer()
 {
   unsigned long tempoLimite = millis() + TIME_CONNECTION;
+  unsigned long nextLog = millis();
 
   while (millis() <= tempoLimite && !HTTP_REQUEST && !ENV_REQUEST)
   {
-    // if ((millis() % 5000) == 0)
-    // {
-    //   Serial.println();
-    //   Serial.print("[BLEServerService::timer()]: MARCAÇÃO TEMPORAL: ");
-    //   Serial.println();
-    //   Serial.print("[BLEServerService::timer()]: tempo atual: ");
-    //   Serial.println(millis());
-    //   Serial.print("[BLEServerService::timer()]: tempo limite: ");
-    //   Serial.println(tempoLimite);
-    //   Serial.println();
-    // }
+    if (millis() >= nextLog)
+    {
+      Serial.println();
+      Serial.print("[BLEServerService::timer()]: MARCAÇÃO TEMPORAL: ");
+      Serial.println();
+      Serial.print("[BLEServerService::timer()]: tempo atual: ");
+      Serial.println(millis());
+      Serial.print("[BLEServerService::timer()]: tempo limite: ");
+      Serial.println(tempoLimite);
+      Serial.println();
+      nextLog = millis() + 5000;
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(50));
   };
 }
 

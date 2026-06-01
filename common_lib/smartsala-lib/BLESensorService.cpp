@@ -3,12 +3,13 @@
 static BLECharacteristic* pCharacteristicSensor;  
 static BLECharacteristic* pCharacteristicHardwareUuid;
 static bool deviceConnected;
+static bool oldDeviceConnected = false;
 static BLEServer* pServer;
 EnvironmentVariablesService __environmentVariableService;
 static DeviceType deviceType;
 EquipmentService equipmentService;
 static String equipmentState = "";
-static String receivedData = "";
+String Buffer = "";
 
 void sendDataToServer(String data)
 {
@@ -83,6 +84,22 @@ void initBLEClient(String deviceName, DeviceType devType)
   Serial.println("[ATUADOR][BLE] Advertising ativo");
 }
 
+void handleBLEConnectionState()
+{
+  if (!deviceConnected && oldDeviceConnected)
+  {
+    delay(500);
+    pServer->startAdvertising();
+    Serial.println("Bluetooth anunciando novamente...");
+    oldDeviceConnected = deviceConnected;
+  }
+
+  if (deviceConnected && !oldDeviceConnected)
+  {
+    oldDeviceConnected = deviceConnected;
+  }
+}
+
 void MyServerCallbacks::onConnect(BLEServer *pServer)
 {
 
@@ -94,6 +111,7 @@ void MyServerCallbacks::onConnect(BLEServer *pServer)
 
   deviceConnected = true;
   SEND_DATA = false;
+  Buffer = "";
 
   Serial.println("[MyServerCallbacks::onConnect()] Conectado");
   Serial.println("[ATUADOR][BLE] UUID de hardware exposto ao controlador: " + hardwareUuid);
@@ -117,27 +135,27 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic)
 {
 
   std::string response = pCharacteristic->getValue();
-  Serial.println("[MyCallbacks::onWrite()] Recebeu pacote: " + String(response.c_str()));
+  String mensagem = String(response.c_str());
+  mensagem.trim();
+  Serial.println("[MyCallbacks::onWrite()] Recebeu pacote: " + mensagem);
 
-  if (String(GET_DATA).equals(response.c_str()))
+  if (mensagem == GET_DATA)
   {
     Serial.println("[ATUADOR][BLE] Handshake GET_DATA recebido");
     SEND_DATA = true;
   }
   else if (deviceType == ATUADOR)
   {
-    if (String(END_DATA).equals(response.c_str()))
-    {
-      Serial.println("[MyCallbacks::onWrite()] ATUADOR - (ONWRITE) COMMANDO PARA O EQUIPAMENTO");
-      SEND_DATA = true;
-      COMMAND = receivedData;
+    Buffer += mensagem;
 
-      equipmentState = "";
-      receivedData = "";
-    }
-    else
+    if (mensagem.indexOf(END_DATA) != -1)
     {
-      receivedData = receivedData + response.c_str();
+      Serial.println("[MyCallbacks::onWrite()] ATUADOR - (ONWRITE) COMANDO COMPLETO PARA O EQUIPAMENTO");
+      Buffer.replace(END_DATA, "");
+      COMMAND = Buffer;
+      Buffer = "";
+      equipmentState = "";
+      SEND_DATA = true;
     }
   }
 }

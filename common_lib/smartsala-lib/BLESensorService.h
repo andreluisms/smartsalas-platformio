@@ -28,6 +28,7 @@
 
 void sendDataToServer(String data);
 void initBLEClient(String deviceName, DeviceType devType);
+void handleBLEConnectionState();
 
 class MyServerCallbacks : public BLEServerCallbacks
 {

@@ -57,6 +57,7 @@ void setup() {
 
 void loop() {
 
+  handleBLEConnectionState();
   Serial.println("[INO]: data solicited ");
   
   

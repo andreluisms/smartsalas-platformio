@@ -71,7 +71,7 @@ bool AwaitHttpService::connectToActuator(String uuidDevice) {
     if(deviceConnected)
       break;
 
-    delay(2000);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
   } while(i < count);
 
@@ -153,7 +153,7 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
     
     HTTP_REQUEST = false;
     
-    delay(2000);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
     if (bleConfirmed) {
         __utils.updateMonitoring(bleMessage);
@@ -178,6 +178,66 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
     HTTP_MESSAGE = "";  
 
     __configAcess.unlock();
+}
+
+String AwaitHttpService::resolveActuatorUuid(Solicitacao request)
+{
+    std::vector<HardwareRecord> actuators = __bleConfiguration->getActuators();
+    String requestType = request.type;
+    requestType.trim();
+    requestType.toUpperCase();
+
+    int expectedTypeEquipment = -1;
+    if (requestType == CONDICIONADOR)
+        expectedTypeEquipment = TYPE_CONDITIONER;
+    else if (requestType == LUZES || requestType == "LUZ")
+        expectedTypeEquipment = TYPE_LIGHT;
+    else
+        return "";
+
+    String requestUuid = request.uuid;
+    requestUuid.trim();
+    bool hasPayloadUuid = (requestUuid.length() > 0 && requestUuid != "null" && requestUuid != "NULL");
+    if (hasPayloadUuid)
+    {
+        for (const HardwareRecord& actuator : actuators)
+        {
+            if (actuator.uuid == requestUuid && actuator.typeEquipment == expectedTypeEquipment)
+                return actuator.uuid;
+        }
+    }
+
+    String uniqueUuid = "";
+    int countByType = 0;
+    for (const HardwareRecord& actuator : actuators)
+    {
+        if (actuator.typeEquipment == expectedTypeEquipment)
+        {
+            uniqueUuid = actuator.uuid;
+            countByType++;
+        }
+    }
+
+    if (countByType == 1)
+        return uniqueUuid;
+
+    return "";
+}
+
+void AwaitHttpService::processConditionerSolicitation(Solicitacao request, String code, bool acting)
+{
+    request.type = CONDICIONADOR;
+    request.code = code;
+    request.acting = acting ? "True" : "False";
+    executeSolicitation(request);
+}
+
+void AwaitHttpService::processLightsSolicitation(Solicitacao request, bool acting)
+{
+    request.type = LUZES;
+    request.code = "null";
+    request.acting = acting ? "True" : "False";
+    executeSolicitation(request);
 }
 
 String AwaitHttpService::getMessageToSend(Solicitacao request)
@@ -205,7 +265,7 @@ void AwaitHttpService::awaitsReturn()
   unsigned long tempoLimite = millis() + 15000;
   while(millis() <= tempoLimite && !HTTP_RECEIVED_DATA)
   { 
-      delay(1000);
+      vTaskDelay(pdMS_TO_TICKS(1000));
       if (__configAcess.isDebug())
                 Serial.println("[CONTROLADOR][HTTP_TASK] Aguardando retorno BLE... " + String(millis()));
   }    
