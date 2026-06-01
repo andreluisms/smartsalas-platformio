@@ -13,7 +13,6 @@ String HTTP::request(String resource, String type, String params) const{
     String url = config.getUrl(); 
     
     resource.trim();
-    resource.toLowerCase();
     
     type.trim();
     type.toLowerCase();
@@ -42,13 +41,13 @@ String HTTP::request(String resource, String type, String params) const{
 
             http.addHeader("Content-Type", "application/json");          
             httpCode = http.POST(params);
-            Serial.println("[HTTP::request()] Code: " + httpCode);
+            Serial.println("[HTTP::request()] Code: " + String(httpCode));
 
         }else if(type.compareTo("put") == 0){
 
             http.addHeader("Content-Type", "application/json");          
             httpCode = http.PUT(params);
-            Serial.println("[HTTP::request()] Code: " + httpCode);        
+            Serial.println("[HTTP::request()] Code: " + String(httpCode));        
         
         }else if(type.compareTo("get") == 0){
             httpCode = http.GET();

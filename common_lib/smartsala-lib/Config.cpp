@@ -17,8 +17,8 @@ Config::Config(){
     __tokenApp  = "594ac3eb82b5080393ad5c426f61c1ed5ac53f90e1abebc15316888cf1c8f5fe";
     __url       = "http://itetech-001-site4.qtempurl.com/api";
     __debug     = true;
-    __ssid      = "U.W.N";
-    __password  = "1011122025";
+    __ssid      = "Colaboradores";
+    __password  = "#ufscolaboradores#";
     __basetime  = 180000;
     __ledStatus = 2;
     __type  = TYPE_CONTROLLER;
@@ -27,7 +27,7 @@ Config::Config(){
     __commandSendAttempts = 3;
     __timesToHasOne = 3;
     // quando false, solicita o ssid e password ao usuário via serial monitor
-    __defaultssid = false;
+    __defaultssid = true;
     
     pinMode(__ledStatus, OUTPUT);
 }
@@ -125,4 +125,3 @@ void Config::unlockEnvVariablesMutex()
 {
   __envVariablesMutex.unlock();
 }
-

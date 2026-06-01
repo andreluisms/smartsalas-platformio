@@ -67,7 +67,7 @@ void EquipmentService::SplitIrComands(String codigoString, vector <int> &codigo)
     }
     else
     {
-      if (codigoString.charAt(i) != ';' || codigoString.charAt(i) != ' ')
+      if (codigoString.charAt(i) != ';' && codigoString.charAt(i) != ' ')
         temp += codigoString.charAt(i);
     }
   }
@@ -91,7 +91,7 @@ void EquipmentService::SendIrComand(vector<int> codigo) {
 
   Serial.println("[EquipmentService::SendIrComand()] Command Size: " +  String(codigo.size()));
   irsend.sendRaw(rawData, codigo.size(), 38); // envia comando IR para o equipamento
-  delay(1000);
+  vTaskDelay(pdMS_TO_TICKS(1000));
 }
 
 /*
@@ -194,18 +194,19 @@ String EquipmentService::executeActionIntoConditioner(String command, String sta
 
   do
   {
-      Serial.println("[EquipmentService::executeActionIntoConditioner()] Enviando comando, tentativa: " + attempt);
+      Serial.println("[EquipmentService::executeActionIntoConditioner()] Enviando comando, tentativa: " + String(attempt));
 
       SendIrComand(codigo);
       isOn = checkIrms();
 
-      isSuccessful = (isOn == state.equals("ON") ? AC_ON : AC_OFF);
+      isSuccessful = (isOn == state.equals("ON"));
   
       attempt++;
+      vTaskDelay(pdMS_TO_TICKS(50));
 
   } while (!isSuccessful && attempt < config.getCommandSendAttempts());
 
-  Serial.println("[EquipmentService::executeActionIntoConditioner()] Comando finalizado, Sucesso: " + isSuccessful);
+  Serial.println("[EquipmentService::executeActionIntoConditioner()] Comando finalizado, Sucesso: " + String(isSuccessful));
 
   return isOn ? AC_ON : AC_OFF;
 }

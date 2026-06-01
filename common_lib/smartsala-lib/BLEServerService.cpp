@@ -36,21 +36,24 @@ void BLEServerService::notifyCallback(BLERemoteCharacteristic *pBLERemoteCharact
   {
     Serial.print("[BLEServerService::notifyCallback()] Callback pela caracteristica: ");
     Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
-    Serial.print(" de tamanho " + length);
+    Serial.print(" de tamanho " + String(length));
     Serial.println();
     Serial.print("[BLEServerService::notifyCallback()] Dado: ");
-    String data = String(((char *)pData));
-    Serial.println(data.substring(0, length));
+    String data = "";
+    data.reserve(length);
+    for (size_t i = 0; i < length; i++)
+      data += (char)pData[i];
+    Serial.println(data);
 
     if (HTTP_REQUEST)
     {
       HTTP_RECEIVED_DATA = true;
-      HTTP_MESSAGE = data.substring(0, length);
+      HTTP_MESSAGE = data;
     }
     else
     {
       ENV_RECEIVED_DATA = true;
-      ENV_MESSAGE = data.substring(0, length);
+      ENV_MESSAGE = data;
     }
   }
 }
@@ -105,6 +108,29 @@ BLEDeviceConnect *BLEServerService::connectToDevice(BLEAdvertisedDevice *myDevic
   }
 
   Serial.println("[BLEServerService::connectToDevice()]: Encontrou nossa caracteristica");
+
+  String deviceId = "";
+  if (device->pRemoteCharacteristic->canRead())
+  {
+    std::string value = device->pRemoteCharacteristic->readValue();
+    deviceId = String(value.c_str());
+    deviceId.trim();
+  }
+
+  bool validUuid = (deviceId.length() == 36 &&
+                    deviceId.charAt(8) == '-' &&
+                    deviceId.charAt(13) == '-' &&
+                    deviceId.charAt(18) == '-' &&
+                    deviceId.charAt(23) == '-');
+
+  if (!validUuid)
+  {
+    Serial.println("[BLEServerService::connectToDevice()]: UUID invalido lido da characteristic, usando MAC");
+    deviceId = myDevice->getAddress().toString().c_str();
+  }
+
+  device->uuid = deviceId;
+  Serial.println("[BLEServerService::connectToDevice()]: BLE ID/UUID: " + device->uuid);
 
   if (validateConnection)
   {
@@ -275,6 +301,12 @@ bool BLEServerService::isSensorListed(String uuid, int typeDisp)
     }
   }
 
+  if (typeDisp == TYPE_ACTUATOR && __devicesMapped.size() == 1 && __actuators.size() == 1 && uuid.equals(__actuators[0].uuid))
+  {
+    Serial.println("[BLEServerService::isSensorListed()]: fallback para atuador unico ativo");
+    return true;
+  }
+
   return false;
 }
 
@@ -289,32 +321,47 @@ bool BLEServerService::connectMyDisp(BLEAdvertisedDevice *device)
   {
     Serial.println("[BLEServerService::connectMyDisp()]: forming successfull a connection");
 
+    String mappedUuid = deviceConnected->uuid;
+    String deviceName = String(device->getName().c_str());
+
+    if (!isSensor(mappedUuid) && !isAtuador(mappedUuid))
+    {
+      if (deviceName.equals("ESP_ATUADOR") && __actuators.size() == 1)
+      {
+        mappedUuid = __actuators[0].uuid;
+        Serial.println("[BLEServerService::connectMyDisp()]: UUID BLE invalido, usando UUID do atuador cadastrado: " + mappedUuid);
+      }
+      else if (deviceName.equals("ESP_SENSOR") && __sensors.size() == 1)
+      {
+        mappedUuid = __sensors[0];
+        Serial.println("[BLEServerService::connectMyDisp()]: UUID BLE invalido, usando UUID do sensor cadastrado: " + mappedUuid);
+      }
+    }
+
     Hardware disp;
     disp.setBLEAdvertisedDevice(device);
-    disp.setUuid(deviceConnected->uuid.c_str());
+    disp.setUuid(mappedUuid.c_str());
 
-    if (isSensor(deviceConnected->uuid.c_str()))
+    if (isSensor(mappedUuid))
     {
       Serial.println("[BLEServerService::connectMyDisp()]: Is Sensor ");
       disp.setTypeDisp(TYPE_SENSOR);
       __countTypeSensor++;
     }
-    else if (isAtuador(deviceConnected->uuid.c_str()))
+    else if (isAtuador(mappedUuid))
     {
       Serial.println("[BLEServerService::connectMyDisp()]: Is Actuator ");
       disp.setTypeDisp(TYPE_ACTUATOR);
       __countTypeActuator++;
     }
 
-    __devicesMapped.insert(std::make_pair(deviceConnected->uuid.c_str(), disp));
+    __devicesMapped.insert(std::make_pair(mappedUuid.c_str(), disp));
     Serial.println("[BLEServerService::connectMyDisp()]: connection saved. finalized");
 
     if (deviceConnected->pClient->isConnected())
       deviceConnected->pClient->disconnect();
 
-    free(deviceConnected->pClient);
-    free(deviceConnected->pRemoteCharacteristic);
-    free(deviceConnected->pRemoteService);
+    BLEDevice::deleteClient(deviceConnected->pClient);
     delete deviceConnected;
 
     return true;
@@ -323,9 +370,7 @@ bool BLEServerService::connectMyDisp(BLEAdvertisedDevice *device)
   {
     Serial.println("[BLEServerService::connectMyDisp()]: have problems in connection");
 
-    free(deviceConnected->pClient);
-    free(deviceConnected->pRemoteCharacteristic);
-    free(deviceConnected->pRemoteService);
+    BLEDevice::deleteClient(deviceConnected->pClient);
     delete deviceConnected;
 
     return false;
@@ -340,11 +385,12 @@ void BLEServerService::sendMessageToActuator(String data)
 
 void BLEServerService::disconnectToActuator()
 {
-  delay(1000);
+  vTaskDelay(pdMS_TO_TICKS(1000));
 
   if (__actuatorConnected->pClient->isConnected())
     __actuatorConnected->pClient->disconnect();
 
+  BLEDevice::deleteClient(__actuatorConnected->pClient);
   delete __actuatorConnected;
 }
 
@@ -373,31 +419,43 @@ bool BLEServerService::connectToActuator(String uuidDevice)
     }
   }
 
+  if (!connected && __devicesMapped.size() == 1 && __actuators.size() == 1 && uuidDevice.equals(__actuators[0].uuid))
+  {
+    auto onlyMapped = __devicesMapped.begin();
+    disp = onlyMapped->second;
+
+    Serial.println("[BLEServerService::connectToActuator()]: fallback para atuador unico");
+    Serial.println("[BLEServerService::connectToActuator()]: uuid requisitado: " + uuidDevice);
+    Serial.println("[BLEServerService::connectToActuator()]: uuid mapeado: " + disp.getUuid());
+
+    __actuatorConnected = connectToDevice(disp.getBLEAdvertisedDevice(), false);
+    if (__actuatorConnected->pClient->isConnected())
+      connected = true;
+  }
+
   return connected;
 }
 
 void BLEServerService::continuousConnectionTask()
 {
-  // bool longTimeWithoutConnections = false;
-
   while (true)
   {
-    vTaskDelay(pdMS_TO_TICKS(TIME_WAITING_CONNECTION));
-
-    Serial.println("[BLEServerService::continuousConnectionTask()] Actual Time: " + String(millis()));
+    Serial.println("[BLEServerService::continuousConnectionTask()] Running cycle at: " + String(millis()));
 
     if (!HTTP_REQUEST && !ENV_REQUEST)
     {
       __configuration.lockEnvVariablesMutex();
 
-      __wfService.disconnect();
+      //__wfService.disconnect();
 
       newCicle();
 
-      __wfService.connect();
+      //__wfService.connect();
 
       __configuration.unlockEnvVariablesMutex();
     }
+
+    vTaskDelay(pdMS_TO_TICKS(TIME_WAITING_CONNECTION));
   }
 }
 
@@ -476,14 +534,12 @@ void BLEServerService::closeConnections(vector<BLEDeviceConnect *> aux)
     Serial.print("[BLEServerService::closeConnections()]: ");
     Serial.println(deviceCon->pClient->getPeerAddress().toString().c_str());
 
-    delay(300);
+    vTaskDelay(pdMS_TO_TICKS(300));
     if (deviceCon->pClient->isConnected())
       deviceCon->pClient->disconnect();
 
-    delay(300);
-    free(deviceCon->pClient);
-    free(deviceCon->pRemoteCharacteristic);
-    free(deviceCon->pRemoteService);
+    vTaskDelay(pdMS_TO_TICKS(300));
+    BLEDevice::deleteClient(deviceCon->pClient);
 
     delete deviceCon;
   }
@@ -532,11 +588,11 @@ void BLEServerService::addActuator(HardwareRecord act)
 void BLEServerService::timer()
 {
   unsigned long tempoLimite = millis() + TIME_CONNECTION;
+  unsigned long nextLog = millis();
 
   while (millis() <= tempoLimite && !HTTP_REQUEST && !ENV_REQUEST)
   {
-
-    if ((millis() % 5000) == 0)
+    if (millis() >= nextLog)
     {
       Serial.println();
       Serial.print("[BLEServerService::timer()]: MARCAÇÃO TEMPORAL: ");
@@ -546,7 +602,10 @@ void BLEServerService::timer()
       Serial.print("[BLEServerService::timer()]: tempo limite: ");
       Serial.println(tempoLimite);
       Serial.println();
+      nextLog = millis() + 5000;
     }
+
+    vTaskDelay(pdMS_TO_TICKS(50));
   };
 }
 
