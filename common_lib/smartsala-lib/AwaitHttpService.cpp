@@ -88,10 +88,33 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
 
     Serial.println("[CONTROLADOR][HTTP_TASK] Validando atuador para solicitacao ID " + String(request.id));
 
-    bool actuatorMapped = __bleConfiguration->isSensorListed(request.uuid, TYPE_ACTUATOR);
+    String actuatorUuid = resolveActuatorUuid(request);
+    if (actuatorUuid.length() == 0) {
+        Serial.println("[CONTROLADOR][HTTP_TASK] Nao foi possivel resolver o UUID do atuador para a solicitacao.");
+        Serial.println("[CONTROLADOR][HTTP_TASK] UUID da solicitacao: " + request.uuid);
+        Serial.println("[CONTROLADOR][HTTP_TASK] Tipo da solicitacao: " + request.type);
+
+        std::vector<struct HardwareRecord> associated = __bleConfiguration->getActuators();
+        Serial.println("[CONTROLADOR][ASSOCIADOS] Atuadores associados cadastrados: " + String(associated.size()));
+        for (const HardwareRecord& act : associated) {
+            Serial.println("[CONTROLADOR][ASSOCIADOS] UUID: " + act.uuid + ", tipo equipamento: " + String(act.typeEquipment));
+        }
+
+        __configAcess.unlock();
+        return;
+    }
+
+    if (!actuatorUuid.equals(request.uuid)) {
+        Serial.println("[CONTROLADOR][HTTP_TASK] UUID da solicitacao nao corresponde ao UUID BLE do atuador.");
+        Serial.println("[CONTROLADOR][HTTP_TASK] UUID da solicitacao: " + request.uuid);
+        Serial.println("[CONTROLADOR][HTTP_TASK] UUID BLE resolvido: " + actuatorUuid);
+    }
+
+    bool actuatorMapped = __bleConfiguration->isSensorListed(actuatorUuid, TYPE_ACTUATOR);
     if(!actuatorMapped) {
         Serial.println("[CONTROLADOR][HTTP_TASK] Atuador nao mapeado no controlador. Tentando novo scan BLE...");
         Serial.println("[CONTROLADOR][HTTP_TASK] UUID da solicitacao: " + request.uuid);
+        Serial.println("[CONTROLADOR][HTTP_TASK] UUID BLE esperado: " + actuatorUuid);
 
         std::vector<struct HardwareRecord> associated = __bleConfiguration->getActuators();
         Serial.println("[CONTROLADOR][ASSOCIADOS] Atuadores associados cadastrados: " + String(associated.size()));
@@ -104,7 +127,7 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
         __bleConfiguration->stopScan();
         __bleConfiguration->populateMap();
 
-        actuatorMapped = __bleConfiguration->isSensorListed(request.uuid, TYPE_ACTUATOR);
+        actuatorMapped = __bleConfiguration->isSensorListed(actuatorUuid, TYPE_ACTUATOR);
         if (!actuatorMapped) {
             Serial.println("[CONTROLADOR][HTTP_TASK] Atuador continua nao mapeado apos novo scan. Solicitacao mantida pendente.");
             __configAcess.unlock();
@@ -118,7 +141,7 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
 
     vTaskDelay(1500/portTICK_PERIOD_MS);
     
-    bool dispConnected = connectToActuator(request.uuid);
+    bool dispConnected = connectToActuator(actuatorUuid);
     bool bleConfirmed = false;
     String bleMessage = "";
 
@@ -149,7 +172,8 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
         Serial.println("[CONTROLADOR][HTTP_TASK] Falha ao conectar BLE. Solicitacao nao sera finalizada");
     }
 
-    __bleConfiguration->disconnectToActuator();
+    if (dispConnected)
+        __bleConfiguration->disconnectToActuator();
     
     HTTP_REQUEST = false;
     

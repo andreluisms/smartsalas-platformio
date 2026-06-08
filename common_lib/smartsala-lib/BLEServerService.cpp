@@ -279,6 +279,14 @@ void BLEServerService::activeBLEScan()
 
 void BLEServerService::scanDevices()
 {
+  if (__devicesMapped.size() == 0)
+  {
+    for (auto device : __filteredDevices)
+      delete device;
+
+    __filteredDevices.clear();
+  }
+
   BLEScanResults foundDevices = __pBLEScan->start(5, false);
 
   for (int i = 0; i < foundDevices.getCount(); i++)
