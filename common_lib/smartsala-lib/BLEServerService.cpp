@@ -312,8 +312,15 @@ void BLEServerService::stopScan()
 */
 void BLEServerService::populateMap()
 {
+  const size_t expectedDevices = __sensors.size() + __actuators.size();
+
+  Serial.println("[BLEServerService::populateMap()]: Dispositivos esperados pela API - sensores: " + String(__sensors.size()) + ", atuadores: " + String(__actuators.size()));
+
   for (auto disp : __filteredDevices)
   {
+    if (expectedDevices > 0 && __devicesMapped.size() >= expectedDevices)
+      break;
+
     if (disp->haveServiceUUID() && disp->isAdvertisingService(SERVICE_UUID))
     {
       // bool deviceConnected = false;
@@ -345,6 +352,8 @@ void BLEServerService::populateMap()
 
   if (__devicesMapped.size() == 0)
     Serial.println("[BLEServerService::populateMap()]: no devices found");
+
+  Serial.println("[BLEServerService::populateMap()]: Dispositivos mapeados: " + String(__devicesMapped.size()) + "/" + String(expectedDevices));
 }
 
 bool BLEServerService::isSensor(String uuid)
@@ -410,6 +419,7 @@ bool BLEServerService::connectMyDisp(BLEAdvertisedDevice *device)
   // During bootstrap mapping, only validate connectivity/UUID.
   // Runtime data collection is handled by newCicle().
   BLEDeviceConnect *deviceConnected = connectToDevice(device, false); //alterando de true pra false pra teste
+  String bleAddress = String(device->getAddress().toString().c_str());
 
   if (deviceConnected->deviceFound)
   {
@@ -424,20 +434,18 @@ bool BLEServerService::connectMyDisp(BLEAdvertisedDevice *device)
     }
 
     String mappedUuid = deviceConnected->uuid;
-    String deviceName = String(device->getName().c_str());
 
-    if (!isSensor(mappedUuid) && !isAtuador(mappedUuid))
+    if (__devicesMapped.find(mappedUuid.c_str()) != __devicesMapped.end())
     {
-      if (deviceName.equals("ESP_ATUADOR") && __actuators.size() == 1)
+      if (__configuration.isDebug())
       {
-        mappedUuid = __actuators[0].uuid;
-        Serial.println("[BLEServerService::connectMyDisp()]: UUID BLE invalido, usando UUID do atuador cadastrado: " + mappedUuid);
+        Serial.println("[BLEServerService::connectMyDisp()]: UUID ja mapeado, mantendo primeiro dispositivo: " + mappedUuid);
+        Serial.println("[BLEServerService::connectMyDisp()]: endereco BLE duplicado ignorado: " + bleAddress);
       }
-      else if (deviceName.equals("ESP_SENSOR") && __sensors.size() == 1)
-      {
-        mappedUuid = __sensors[0];
-        Serial.println("[BLEServerService::connectMyDisp()]: UUID BLE invalido, usando UUID do sensor cadastrado: " + mappedUuid);
-      }
+
+      releaseDeviceConnect(deviceConnected);
+
+      return true;
     }
 
     Hardware disp;
@@ -445,33 +453,45 @@ bool BLEServerService::connectMyDisp(BLEAdvertisedDevice *device)
     disp.setUuid(mappedUuid.c_str());
 
     bool recognizedType = false; 
+    String mappedType = "";
 
     if (isSensor(deviceConnected->uuid.c_str()))
     {
       disp.setTypeDisp(TYPE_SENSOR);
       __countTypeSensor++;
       recognizedType = true;
+      mappedType = "SENSOR";
     }
     else if (isAtuador(mappedUuid))
     {
       disp.setTypeDisp(TYPE_ACTUATOR);
       __countTypeActuator++;
       recognizedType = true;
+      mappedType = "ATUADOR";
     }
 
     if (!recognizedType)
     {
       if (__configuration.isDebug())
+      {
         Serial.println("[BLEServerService::connectMyDisp()]: UUID nao reconhecido entre sensores/atuadores associados");
+        Serial.println("[BLEServerService::connectMyDisp()]: endereco BLE ignorado: " + bleAddress);
+        Serial.println("[BLEServerService::connectMyDisp()]: UUID lido: " + mappedUuid);
+      }
 
       releaseDeviceConnect(deviceConnected);
 
       return false;
     }
 
-    __devicesMapped.insert(std::make_pair(deviceConnected->uuid.c_str(), disp));
+    __devicesMapped.insert(std::make_pair(mappedUuid.c_str(), disp));
     if (__configuration.isDebug())
-      Serial.println("[BLEServerService::connectMyDisp()]: dispositivo mapeado: " + deviceConnected->uuid);
+    {
+      Serial.println("[BLEServerService::connectMyDisp()]: dispositivo mapeado");
+      Serial.println("[BLEServerService::connectMyDisp()]: tipo: " + mappedType);
+      Serial.println("[BLEServerService::connectMyDisp()]: endereco BLE: " + bleAddress);
+      Serial.println("[BLEServerService::connectMyDisp()]: UUID: " + mappedUuid);
+    }
 
     releaseDeviceConnect(deviceConnected);
 
@@ -653,6 +673,23 @@ vector<String> BLEServerService::getSensors()
 vector<struct HardwareRecord> BLEServerService::getActuators()
 {
   return __actuators;
+}
+
+int BLEServerService::getExpectedDevicesCount()
+{
+  return __sensors.size() + __actuators.size();
+}
+
+int BLEServerService::getMappedDevicesCount()
+{
+  return __devicesMapped.size();
+}
+
+bool BLEServerService::hasMappedAllExpectedDevices()
+{
+  int expectedDevices = getExpectedDevicesCount();
+
+  return expectedDevices > 0 && getMappedDevicesCount() >= expectedDevices;
 }
 
 void BLEServerService::setCountTypeSensor(int count)

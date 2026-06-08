@@ -31,7 +31,7 @@ class Controller
 
         // BLE
         void setupBLEClient(String deviceName, DeviceType deviceType);   
-        void setupBLEServer();   
+        bool setupBLEServer();   
         void startBLETaskServer();    
         bool notificateServer() const;       
 

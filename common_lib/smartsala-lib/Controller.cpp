@@ -68,12 +68,37 @@ void Controller::startBLETaskServer(){
 
 
 // Configura o servidor BLE
-void Controller::setupBLEServer(){
-    __bleConfig->initBLE();          // Inicializa o BLE
-    __bleConfig->activeBLEScan();    // Ativa o modo de scan
-    __bleConfig->scanDevices();      // Realiza o scan de dispositivos
-    __bleConfig->stopScan();         // Para o scan
-    __bleConfig->populateMap();      // Organiza os dispositivos encontrados
+bool Controller::setupBLEServer(){
+    const int maxAttempts = 5;
+    static bool bleInitialized = false;
+
+    if (!bleInitialized)
+    {
+        __bleConfig->initBLE();          // Inicializa o BLE
+        bleInitialized = true;
+    }
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++)
+    {
+        Serial.println("[CONTROLADOR][BLE] Tentativa de mapeamento: " + String(attempt) + "/" + String(maxAttempts));
+
+        __bleConfig->activeBLEScan();    // Ativa o modo de scan
+        __bleConfig->scanDevices();      // Realiza o scan de dispositivos
+        __bleConfig->stopScan();         // Para o scan
+        __bleConfig->populateMap();      // Organiza os dispositivos encontrados
+
+        if (__bleConfig->hasMappedAllExpectedDevices())
+        {
+            Serial.println("[CONTROLADOR][BLE] Todos os dispositivos esperados foram mapeados");
+            return true;
+        }
+
+        Serial.println("[CONTROLADOR][BLE] Mapeamento incompleto: " + String(__bleConfig->getMappedDevicesCount()) + "/" + String(__bleConfig->getExpectedDevicesCount()));
+        delay(2000);
+    }
+
+    Serial.println("[CONTROLADOR][BLE] Falha ao mapear todos os dispositivos esperados");
+    return false;
 }
 
 
@@ -142,13 +167,18 @@ void Controller::setupEnvironmentVariables(){
 void Controller::fillHardwares(HardwareRecord hardware){
      // Obtém a lista de hardwares associados
     std::vector<struct HardwareRecord> hardwares = __httpservice.getHardwares(hardware);
+    int associatedSensors = 0;
     int associatedActuators = 0;
     
      // Percorre cada hardware retornado
     for(struct HardwareRecord r : hardwares){
         // Se for sensor, adiciona como sensor BLE
         if(r.typeHardwareId == TYPE_SENSOR)
+        {
             __bleConfig->addSensor(r.uuid);
+            associatedSensors++;
+            Serial.println("[CONTROLADOR][ASSOCIADOS] Sensor associado: " + r.uuid);
+        }
         else
         // Caso contrário, adiciona como atuador
         {
@@ -158,6 +188,7 @@ void Controller::fillHardwares(HardwareRecord hardware){
         }
     } 
 
+    Serial.println("[CONTROLADOR][ASSOCIADOS] Total de sensores associados: " + String(associatedSensors));
     Serial.println("[CONTROLADOR][ASSOCIADOS] Total de atuadores associados: " + String(associatedActuators));
 }
 
