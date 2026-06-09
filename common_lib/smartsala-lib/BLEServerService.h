@@ -69,6 +69,9 @@ class BLEServerService
     // getters and setters
     vector<String> getSensors();
     vector<struct HardwareRecord> getActuators();
+    int getExpectedDevicesCount();
+    int getMappedDevicesCount();
+    bool hasMappedAllExpectedDevices();
     void addSensor(String uuid);
     void addActuator(HardwareRecord act);
     void newCicle();

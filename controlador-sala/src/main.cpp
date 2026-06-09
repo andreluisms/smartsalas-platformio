@@ -41,7 +41,10 @@ void setup() {
   Serial.println("[CONTROLADOR][INIT] Configuracao carregada");
 
   // Configure BLE Service
-  controller.setupBLEServer();
+  while (!controller.setupBLEServer()) {
+    Serial.println("[CONTROLADOR][INIT] BLE incompleto, nova tentativa antes de iniciar as tasks");
+    delay(5000);
+  }
   Serial.println("[CONTROLADOR][INIT] BLE configurado");
   controller.startBLETaskServer();	
   Serial.println("[CONTROLADOR][INIT] Task do servidor BLE iniciada");
