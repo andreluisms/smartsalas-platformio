@@ -49,21 +49,19 @@ std::vector<String> UtilsService::splitPayload(String payload, int maxSize)
 {
     std::vector<String> subStrings;
     String packet = "";
-    int index = 0;
+    if (maxSize <= 0)
+      maxSize = MAX_LENGTH_PACKET;
 
-    do
+    for (int index = 0; index < payload.length(); index++)
     {
-        packet = packet + payload[index];
+        packet += payload[index];
 
-        if ((index != 0 && (index % MAX_LENGTH_PACKET) == 0) || (payload.length() - 1) == index)  
+        if (packet.length() >= maxSize || index == (payload.length() - 1))
         {
            subStrings.push_back(packet);
            packet = "";
         }
-
-        index++;
-
-    } while(index < payload.length());
+    }
 
     subStrings.push_back(END_DATA);
  

@@ -10,6 +10,17 @@ WiFiService __wifi;
 
 AwaitHttpService::AwaitHttpService() {}
 
+static bool isValidBleAck(const String& message)
+{
+    return message.equals(AC_ON) ||
+           message.equals(AC_OFF) ||
+           message.equals(LZ_ON) ||
+           message.equals(LZ_OFF);
+}
+
+static const TickType_t BLE_PACKET_GAP_MS = pdMS_TO_TICKS(75);
+static const unsigned long HTTP_BLE_RESPONSE_TIMEOUT_MS = 20000;
+
 void AwaitHttpService::startAwait()
 {
     xTaskCreate(this->awaitSolicitation, "awaitSolicitation", 8192, this, 8, NULL);
@@ -149,6 +160,9 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
         String payload = getMessageToSend(request);
         Serial.println("[CONTROLADOR][HTTP_TASK] Enviando comando ao atuador");
 
+        HTTP_RECEIVED_DATA = false;
+        HTTP_MESSAGE = "";
+
         std::vector<String> subStrings = __utils.splitPayload(payload, MAX_LENGTH_PACKET);
 
         for (const String& packet : subStrings){       
@@ -156,17 +170,22 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
                 Serial.println("[CONTROLADOR][HTTP_TASK] Enviando pacote BLE");
             }
             __bleConfiguration->sendMessageToActuator(packet);
+            vTaskDelay(BLE_PACKET_GAP_MS);
         }
 
         awaitsReturn();
 
         bleMessage = HTTP_MESSAGE;
-        bleConfirmed = HTTP_RECEIVED_DATA && bleMessage.length() > 0 && !bleMessage.equals("NOT-AVALIABLE") && !bleMessage.equals("ERROR");
+        bleMessage.trim();
+        bleConfirmed = HTTP_RECEIVED_DATA && isValidBleAck(bleMessage);
 
         if (bleConfirmed)
             Serial.println("[CONTROLADOR][HTTP_TASK] Confirmacao BLE positiva recebida");
-        else
+        else {
             Serial.println("[CONTROLADOR][HTTP_TASK] Sem confirmacao BLE positiva");
+            if (HTTP_RECEIVED_DATA)
+                Serial.println("[CONTROLADOR][HTTP_TASK] Resposta BLE ignorada por formato invalido: " + bleMessage);
+        }
     }
     else {
         Serial.println("[CONTROLADOR][HTTP_TASK] Falha ao conectar BLE. Solicitacao nao sera finalizada");
@@ -286,10 +305,10 @@ String AwaitHttpService::getMessageToSend(Solicitacao request)
 
 void AwaitHttpService::awaitsReturn()
 {
-  unsigned long tempoLimite = millis() + 15000;
+  unsigned long tempoLimite = millis() + HTTP_BLE_RESPONSE_TIMEOUT_MS;
   while(millis() <= tempoLimite && !HTTP_RECEIVED_DATA)
   { 
-      vTaskDelay(pdMS_TO_TICKS(1000));
+      vTaskDelay(pdMS_TO_TICKS(100));
       if (__configAcess.isDebug())
                 Serial.println("[CONTROLADOR][HTTP_TASK] Aguardando retorno BLE... " + String(millis()));
   }    

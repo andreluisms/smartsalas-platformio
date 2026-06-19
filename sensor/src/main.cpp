@@ -23,6 +23,12 @@ float temperature;
 const int portaPresenca = 14;
 
 int qtdDetectouPresenca = 0;
+bool estadoAnteriorPresenca = false;
+unsigned long ultimoMovimentoMs = 0;
+unsigned long ultimaLeituraPresencaMs = 0;
+const unsigned long janelaPresencaMs = 30000;
+const unsigned long intervaloLeituraPresencaMs = 100;
+int qtdEventosMovimento = 0;
 
 void setup() {
 
@@ -60,12 +66,38 @@ void loop() {
   handleBLEConnectionState();
   Serial.println("[INO]: data solicited ");
   
-  
   bool leitura = digitalRead(portaPresenca);
+  unsigned long agora = millis();
   temperature = dht.readTemperature();
 
-  Serial.print("[SENSOR] Presenca: ");
-  Serial.println(leitura ? "SIM" : "NAO");
+  if ((agora - ultimaLeituraPresencaMs) >= intervaloLeituraPresencaMs) {
+    if (leitura && !estadoAnteriorPresenca) {
+      ultimoMovimentoMs = agora;
+      qtdEventosMovimento++;
+      Serial.print("[PIR][EVENTO] Movimento detectado em ");
+      Serial.print(agora);
+      Serial.println(" ms");
+    }
+
+    ultimaLeituraPresencaMs = agora;
+    estadoAnteriorPresenca = leitura;
+  }
+
+  bool presencaAtiva = (agora - ultimoMovimentoMs) < janelaPresencaMs;
+
+  Serial.print("[PIR][TESTE] Pino: ");
+  Serial.print(leitura ? "HIGH" : "LOW");
+  Serial.print(" | Presenca considerada: ");
+  Serial.print(presencaAtiva ? "SIM" : "NAO");
+  Serial.print(" | Eventos: ");
+  Serial.print(qtdEventosMovimento);
+  Serial.print(" | Ultimo movimento ha ");
+  Serial.print(agora - ultimoMovimentoMs);
+  Serial.println(" ms");
+
+  // Logica antiga mantida comentada para comparacao durante os testes.
+  // Serial.print("[SENSOR] Presenca: ");
+  // Serial.println(leitura ? "SIM" : "NAO");
   Serial.print("[SENSOR] Temperatura: ");
   if (isnan(temperature)) {
     Serial.println("ERRO na leitura");
@@ -73,22 +105,24 @@ void loop() {
     Serial.println(temperature);
   }
 
-  if(leitura) {
-    qtdDetectouPresenca++;
-  }
+  // if(leitura) {
+  //   qtdDetectouPresenca++;
+  // }
 
 
   if(SEND_DATA) {
     Serial.println("[INO]: data solicted ");
 
-    monitoringRecord.hasPresent = qtdDetectouPresenca > 0 ? "S" : "N";
-
     monitoringRecord.temperature = temperature;
+    monitoringRecord.hasPresent = presencaAtiva ? "S" : "N";
 
     Serial.print("[SENSOR] Enviando temperatura: ");
     Serial.println(monitoringRecord.temperature);
     Serial.print("[SENSOR] Enviando presenca: ");
     Serial.println(monitoringRecord.hasPresent);
+
+    // Logica antiga mantida comentada para comparacao durante os testes.
+    // monitoringRecord.hasPresent = qtdDetectouPresenca > 0 ? "S" : "N";
 
     controller.sendDataOfMonitoring(monitoringRecord);
 
@@ -97,7 +131,8 @@ void loop() {
     SEND_DATA = false;
 
     qtdDetectouPresenca = 0;
+    qtdEventosMovimento = 0;
   }
   
-  delay(2000);
+  delay(3000);
 }

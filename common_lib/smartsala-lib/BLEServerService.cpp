@@ -65,7 +65,6 @@ static String sanitizeBleText(const std::string &raw)
   }
 
   out.trim();
-  out.toLowerCase();
 
   return out;
 }
@@ -103,7 +102,8 @@ void BLEServerService::notifyCallback(BLERemoteCharacteristic *pBLERemoteCharact
 {
   if (isNotify)
   {
-    String data = String(((char *)pData));
+    const std::string rawPayload(reinterpret_cast<char *>(pData), length);
+    String data = sanitizeBleText(rawPayload);
     // Serial.print("[BLEServerService::notifyCallback()] Callback pela caracteristica: ");
     // Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
     // Serial.print(" de tamanho " + length);
@@ -112,7 +112,10 @@ void BLEServerService::notifyCallback(BLERemoteCharacteristic *pBLERemoteCharact
     // Serial.println(data.substring(0, length));
     // Serial.println("[BLEServerService::notifyCallback()] Payload BLE recebido com sucesso");
     if (__configuration.isDebug())
+    {
       Serial.println(String("[BLEServerService::notifyCallback()] Notificacao BLE recebida (") + String(length) + " bytes)");
+      Serial.println("[CTRL][BLE] Payload recebido do sensor: " + data);
+    }
 
     if (HTTP_REQUEST)
     {

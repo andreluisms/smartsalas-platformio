@@ -99,11 +99,15 @@ void EnvironmentVariablesService::sendDataToActuator(String uuid, String message
                 
   if(dispConnected)
   {
+    ENV_RECEIVED_DATA = false;
+    ENV_MESSAGE = "";
+
     std::vector<String> subStrings = __utilsService.splitPayload(message, MAX_LENGTH_PACKET);
 
     for (const String& packet: subStrings)
     {
       __bleServerConfig->sendMessageToActuator(packet);
+      vTaskDelay(pdMS_TO_TICKS(75));
     }
         
     awaitsReturn();
@@ -181,9 +185,22 @@ bool EnvironmentVariablesService::getRoomDuringClassTime() {
  * infomacoes obtidas dos modulos de sensoriamento e dos dados das reservas da sala <descricao/>
  */
 void EnvironmentVariablesService::turnOnManagedDevices() {
+    if (__config.isDebug())
+    {
+      Serial.println("[CTRL][ENV] Avaliando acionamento: IN_CLASS=" + String(IN_CLASS) +
+                     " | hasMovement=" + String(__hasMovement) +
+                     " | AC.estado=" + String(__monitoringConditioner.estado) +
+                     " | AC.id=" + String(__monitoringConditioner.id) +
+                     " | AC.equipamentoId=" + String(__monitoringConditioner.equipamentoId) +
+                     " | LZ.estado=" + String(__monitoringLight.estado) +
+                     " | LZ.id=" + String(__monitoringLight.id) +
+                     " | LZ.equipamentoId=" + String(__monitoringLight.equipamentoId));
+    }
     
     if (IN_CLASS && __hasMovement) 
     {
+      if(__config.isDebug())
+        Serial.println("[CTRL][ENV] Condicao para ligar dispositivos satisfeita");
 
       if (!__monitoringConditioner.estado && __monitoringConditioner.id > 0 && __monitoringConditioner.equipamentoId > 0)
         turnOnConditioner();
@@ -315,7 +332,8 @@ void EnvironmentVariablesService::turnOfLight(){
 void EnvironmentVariablesService::awaitsReturn()
 {
   unsigned long tempoLimite = millis() + TIME_TO_AWAIT_RETURN;
-  while(millis() <= tempoLimite && !ENV_RECEIVED_DATA) {}    
+  while(millis() <= tempoLimite && !ENV_RECEIVED_DATA)
+    vTaskDelay(pdMS_TO_TICKS(100));
 }
 
 void EnvironmentVariablesService::checkTimeToLoadReservations()
@@ -341,7 +359,16 @@ void EnvironmentVariablesService::checkEnvironmentVariables()
 {
   if (ENV_RECEIVED_DATA) 
   {
+    if(__config.isDebug())
+      Serial.println("[CTRL][ENV] ENV_MESSAGE bruto: " + ENV_MESSAGE);
+
     struct MonitoringRecord variables = deserealizeData(ENV_MESSAGE);
+
+    if(__config.isDebug())
+    {
+      Serial.println("[CTRL][ENV] Monitoramento interpretado: hasPresent=" + variables.hasPresent +
+                     " | temperature=" + String(variables.temperature));
+    }
 
     if (variables.hasPresent == "S") 
     {
@@ -352,6 +379,10 @@ void EnvironmentVariablesService::checkEnvironmentVariables()
     {
       __hasMovement = false;
     }
+
+    if(__config.isDebug())
+      Serial.println("[CTRL][ENV] Estado interno atualizado: __hasMovement=" + String(__hasMovement) +
+                     " | __lastTimeAttended=" + String(__lastTimeAttended));
 
     ENV_MESSAGE = "";
     ENV_RECEIVED_DATA = false; 
@@ -392,6 +423,11 @@ void EnvironmentVariablesService::continuousValidation()
   checkTimeToLoadReservations();
 
   IN_CLASS = getRoomDuringClassTime();
+
+  if(__config.isDebug())
+    Serial.println("[CTRL][ENV] Validacao continua: horaAtual=" + __currentTime +
+                   " | IN_CLASS=" + String(IN_CLASS) +
+                   " | reservasCarregadas=" + String(__reservations.size()));
 
   checkEnvironmentVariables();
 
