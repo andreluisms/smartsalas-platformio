@@ -395,6 +395,7 @@ struct Monitoramento HTTPService::getMonitoringByIdSalaAndEquipamento(String tip
     String route;
     struct Monitoramento monitoramento = {0, false, 0};
     EnvironmentVariablesService environment;
+    HardwareRecord hardware = environment.getHardware();
         
     if (config.getRoute() == 1)
         route = "";
@@ -406,11 +407,25 @@ struct Monitoramento HTTPService::getMonitoringByIdSalaAndEquipamento(String tip
     String params = "";
 
     routeService.concat(route);
-    routeService.concat(environment.getHardware().salaId);
+    routeService.concat(hardware.salaId);
     routeService.concat("/");
     routeService.concat(tipoEquipamento);
 
+    if (config.isDebug())
+    {
+        Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Iniciando consulta de monitoramento");
+        Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] salaId=" + String(hardware.salaId) +
+                       " | tipoEquipamento=" + tipoEquipamento);
+        Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] routeService=" + routeService);
+    }
+
     String response = http.request(routeService, type, params);
+
+    if (config.isDebug())
+    {
+        Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Resposta bruta da API:");
+        Serial.println(response);
+    }
                 
     if (strstr(response.c_str(), "[ERROR]") == NULL && strstr(response.c_str(), "[NO_CONTENT]") == NULL)
     {
@@ -432,14 +447,27 @@ struct Monitoramento HTTPService::getMonitoringByIdSalaAndEquipamento(String tip
             monitoramento.id = doc["result"]["id"].as<int>();
             monitoramento.estado = doc["result"]["estado"].as<bool>();
             monitoramento.equipamentoId = doc["result"]["equipamentoId"].as<int>();
+
+            if (config.isDebug())
+            {
+                Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Monitoramento carregado com sucesso");
+                Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] id=" + String(monitoramento.id) +
+                               " | estado=" + String(monitoramento.estado) +
+                               " | equipamentoId=" + String(monitoramento.equipamentoId));
+            }
         }
         else
         {
             if (config.isDebug())
             {
+                Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] httpCode=" + String(doc["httpCode"].as<int>()));
                 Serial.println(String("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Mensagem: ") + doc["message"].as<const char *>());
             }
         }
+    }
+    else if (config.isDebug())
+    {
+        Serial.println("[HTTPService::getMonitoringByIdSalaAndEquipamento()] Requisicao retornou erro bruto ou sem conteudo");
     }
 
     return monitoramento;

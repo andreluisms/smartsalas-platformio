@@ -18,6 +18,7 @@ static bool isValidBleAck(const String& message)
            message.equals(LZ_OFF);
 }
 
+// Configurações de tempo para envio dos pacotes BLE e timeout para resposta BLE
 static const TickType_t BLE_PACKET_GAP_MS = pdMS_TO_TICKS(75);
 static const unsigned long HTTP_BLE_RESPONSE_TIMEOUT_MS = 20000;
 
@@ -308,7 +309,7 @@ void AwaitHttpService::awaitsReturn()
   unsigned long tempoLimite = millis() + HTTP_BLE_RESPONSE_TIMEOUT_MS;
   while(millis() <= tempoLimite && !HTTP_RECEIVED_DATA)
   { 
-      vTaskDelay(pdMS_TO_TICKS(100));
+      vTaskDelay(pdMS_TO_TICKS(2000));
       if (__configAcess.isDebug())
                 Serial.println("[CONTROLADOR][HTTP_TASK] Aguardando retorno BLE... " + String(millis()));
   }    

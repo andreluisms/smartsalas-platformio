@@ -31,6 +31,18 @@ void EnvironmentVariablesService::initEnvironmentVariables()
     __reservations = __httpRequestService.getReservationsToday();
     __lastTimeLoadReservations = millis();
     __lastTimeAttended = millis();
+
+    if (__config.isDebug())
+    {
+        Serial.println("[CTRL][ENV] initEnvironmentVariables concluido");
+        Serial.println("[CTRL][ENV] Monitoramento AC: id=" + String(__monitoringConditioner.id) +
+                       " | estado=" + String(__monitoringConditioner.estado) +
+                       " | equipamentoId=" + String(__monitoringConditioner.equipamentoId));
+        Serial.println("[CTRL][ENV] Monitoramento LZ: id=" + String(__monitoringLight.id) +
+                       " | estado=" + String(__monitoringLight.estado) +
+                       " | equipamentoId=" + String(__monitoringLight.equipamentoId));
+        Serial.println("[CTRL][ENV] Reservas carregadas: " + String(__reservations.size()));
+    }
 }
 
 unsigned long EnvironmentVariablesService::getLastTimeAttended() 
