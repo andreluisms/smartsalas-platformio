@@ -446,7 +446,7 @@ struct Monitoramento HTTPService::getMonitoringByIdSalaAndEquipamento(String tip
         {
             monitoramento.id = doc["result"]["id"].as<int>();
             monitoramento.estado = doc["result"]["estado"].as<bool>();
-            monitoramento.equipamentoId = doc["result"]["equipamentoId"].as<int>();
+            monitoramento.equipamentoId = doc["result"]["idEquipamento"].as<int>();
 
             if (config.isDebug())
             {
