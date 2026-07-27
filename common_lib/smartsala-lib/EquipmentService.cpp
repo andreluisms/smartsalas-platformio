@@ -190,7 +190,9 @@ String EquipmentService::executeActionIntoConditioner(String command, String sta
   std::vector <int> codigo;
   SplitIrComands(command, codigo);
   int attempt = 0;
-  bool isSuccessful, isOn;
+  bool isSuccessful = false;
+  bool isOn = false;
+  const bool expectedOn = state.equals("ON");
 
   do
   {
@@ -199,14 +201,19 @@ String EquipmentService::executeActionIntoConditioner(String command, String sta
       SendIrComand(codigo);
       isOn = checkIrms();
 
-      isSuccessful = (isOn == state.equals("ON"));
+      isSuccessful = (isOn == expectedOn);
   
       attempt++;
       vTaskDelay(pdMS_TO_TICKS(50));
 
   } while (!isSuccessful && attempt < config.getCommandSendAttempts());
 
+  Serial.println("[EquipmentService::executeActionIntoConditioner()] Estado esperado: " + String(expectedOn ? "ON" : "OFF"));
+  Serial.println("[EquipmentService::executeActionIntoConditioner()] Estado lido no sensor: " + String(isOn ? "ON" : "OFF"));
   Serial.println("[EquipmentService::executeActionIntoConditioner()] Comando finalizado, Sucesso: " + String(isSuccessful));
 
-  return isOn ? AC_ON : AC_OFF;
+  if (!isSuccessful)
+    return "ERROR";
+
+  return expectedOn ? AC_ON : AC_OFF;
 }

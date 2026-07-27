@@ -18,6 +18,17 @@ static bool isValidBleAck(const String& message)
            message.equals(LZ_OFF);
 }
 
+static String getExpectedBleAck(const Solicitacao& request)
+{
+    const bool turnOn = request.acting == "True";
+    const bool isLightRequest = request.type == LUZES || request.type == "LUZ";
+
+    if (isLightRequest)
+        return turnOn ? LZ_ON : LZ_OFF;
+
+    return turnOn ? AC_ON : AC_OFF;
+}
+
 // Configurações de tempo para envio dos pacotes BLE e timeout para resposta BLE
 static const TickType_t BLE_PACKET_GAP_MS = pdMS_TO_TICKS(75);
 static const unsigned long HTTP_BLE_RESPONSE_TIMEOUT_MS = 20000;
@@ -178,14 +189,19 @@ void AwaitHttpService::executeSolicitation(Solicitacao request) {
 
         bleMessage = HTTP_MESSAGE;
         bleMessage.trim();
-        bleConfirmed = HTTP_RECEIVED_DATA && isValidBleAck(bleMessage);
+        const String expectedAck = getExpectedBleAck(request);
+        bleConfirmed = HTTP_RECEIVED_DATA &&
+                       isValidBleAck(bleMessage) &&
+                       bleMessage.equals(expectedAck);
 
         if (bleConfirmed)
             Serial.println("[CONTROLADOR][HTTP_TASK] Confirmacao BLE positiva recebida");
         else {
             Serial.println("[CONTROLADOR][HTTP_TASK] Sem confirmacao BLE positiva");
-            if (HTTP_RECEIVED_DATA)
-                Serial.println("[CONTROLADOR][HTTP_TASK] Resposta BLE ignorada por formato invalido: " + bleMessage);
+            if (HTTP_RECEIVED_DATA) {
+                Serial.println("[CONTROLADOR][HTTP_TASK] ACK esperado: " + expectedAck);
+                Serial.println("[CONTROLADOR][HTTP_TASK] ACK recebido: " + bleMessage);
+            }
         }
     }
     else {
@@ -246,8 +262,16 @@ String AwaitHttpService::resolveActuatorUuid(Solicitacao request)
     {
         for (const HardwareRecord& actuator : actuators)
         {
-            if (actuator.uuid == requestUuid && actuator.typeEquipment == expectedTypeEquipment)
+            if (actuator.uuid == requestUuid)
+            {
+                if (actuator.typeEquipment != expectedTypeEquipment)
+                {
+                    Serial.println("[CONTROLADOR][HTTP_TASK] UUID encontrado com tipo divergente. Prosseguindo com o UUID da solicitacao.");
+                    Serial.println("[CONTROLADOR][HTTP_TASK] Tipo da solicitacao: " + requestType);
+                    Serial.println("[CONTROLADOR][HTTP_TASK] typeEquipment associado: " + String(actuator.typeEquipment));
+                }
                 return actuator.uuid;
+            }
         }
     }
 
