@@ -162,11 +162,22 @@ void EnvironmentVariablesService::sendDataToActuator(int typeEquipment, String m
 
 String EnvironmentVariablesService::getUuidActuator(int typeEquipment)
 {
+  std::vector<struct HardwareRecord> actuators = __bleServerConfig->getActuators();
   String uuid = "";
-  for(struct HardwareRecord r : __bleServerConfig->getActuators())
+  for(struct HardwareRecord r : actuators)
   {
     if(r.typeEquipment == typeEquipment)
       uuid = r.uuid;
+  }
+
+  if(uuid.length() == 0 && actuators.size() == 1)
+  {
+    uuid = actuators[0].uuid;
+
+    if(__config.isDebug())
+      Serial.println("[EnvironmentVariablesService::getUuidActuator()]: Nenhum atuador do tipo " + String(typeEquipment) +
+                     " encontrado; usando atuador unico associado: " + uuid +
+                     " | tipoEquipamento cadastrado=" + String(actuators[0].typeEquipment));
   }
 
   return uuid;
